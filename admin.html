@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Profit Traders Developers Connect</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root{--primary:#0D9488;--primary-dark:#0F766E;--primary-light:#14B8A6;--secondary:#059669;--accent:#F59E0B;--accent-dark:#D97706;--danger:#EF4444;--success:#10B981;--info:#06B6D4;--bg:#F1F5F9;--bg-card:#FFFFFF;--bg-sidebar:#FFFFFF;--text:#0F172A;--text-sec:#64748B;--border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.08);--sidebar-w:260px}
+[data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--bg-sidebar:#111827;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;overflow-x:hidden}
+h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+.page{display:none}.page.active{display:block}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;z-index:1000;transition:transform .3s;display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)}.sidebar-header h5{font-size:1rem;color:var(--primary);font-weight:800}.sidebar-header small{color:var(--text-sec);font-size:.75rem}
+.sidebar-nav{flex:1;padding:1rem 0}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1.5rem;color:var(--text-sec);cursor:pointer;transition:all .2s;font-size:.9rem;font-weight:500;border-left:3px solid transparent}
+.nav-item:hover{color:var(--primary);background:rgba(13,148,136,.05)}.nav-item.active{color:var(--primary);background:rgba(13,148,136,.08);border-left-color:var(--primary);font-weight:600}
+.nav-item i{width:20px;text-align:center}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid var(--border)}
+.main-content{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* Topbar */
+.topbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:900}
+.topbar-left{display:flex;align-items:center;gap:1rem}.topbar-left h4{font-size:1.1rem;font-weight:700;margin:0}
+.hamburger{display:none;background:none;border:none;font-size:1.3rem;color:var(--text);cursor:pointer}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+.btn-icon{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-sec);transition:all .2s;position:relative}
+.btn-icon:hover{color:var(--primary);border-color:var(--primary)}
+.notif-badge{position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:var(--danger);color:#fff;font-size:.6rem;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.profile-btn{display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.25rem .5rem;border-radius:10px;transition:background .2s}.profile-btn:hover{background:var(--bg)}
+.profile-btn .avatar{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem}
+.profile-dropdown{position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.12);min-width:180px;padding:.5rem 0;display:none;z-index:999}
+.profile-dropdown.show{display:block}
+.profile-dropdown a{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;color:var(--text-sec);font-size:.85rem;transition:all .15s}.profile-dropdown a:hover{background:var(--bg);color:var(--primary)}
+.content-area{flex:1;padding:1.5rem}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999}.sidebar-overlay.show{display:block}
+
+/* Stat Cards */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;margin-bottom:1.5rem}
+.s-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;display:flex;align-items:center;gap:1rem;transition:all .3s;box-shadow:var(--shadow)}
+.s-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.1)}
+.s-card .icon-box{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.s-card .info h3{font-size:1.5rem;font-weight:800;margin-bottom:.1rem}.s-card .info p{color:var(--text-sec);font-size:.8rem;margin:0}
+.bg-grad-teal{background:linear-gradient(135deg,#0D9488,#14B8A6);color:#fff}
+.bg-grad-amber{background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff}
+.bg-grad-rose{background:linear-gradient(135deg,#F43F5E,#FB7185);color:#fff}
+.bg-grad-sky{background:linear-gradient(135deg,#0EA5E9,#38BDF8);color:#fff}
+.bg-grad-violet{background:linear-gradient(135deg,#8B5CF6,#A78BFA);color:#fff}
+
+/* Tables */
+.table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.table-card .card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.table-card .card-header h5{font-size:1.05rem;font-weight:700;margin:0}
+.table-card .table{margin:0;color:var(--text)}
+.table-card .table th{background:var(--bg);color:var(--text-sec);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);padding:.75rem 1rem;white-space:nowrap}
+.table-card .table td{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.88rem;vertical-align:middle}
+.table-card .table tr:last-child td{border-bottom:none}.table-card .table tr:hover td{background:rgba(13,148,136,.03)}
+.badge-status{padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-active{background:rgba(16,185,129,.12);color:#059669}.badge-completed{background:rgba(14,165,233,.12);color:#0284C7}.badge-hold{background:rgba(245,158,11,.12);color:#D97706}
+.table-actions{display:flex;gap:.35rem}
+.table-actions button{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-sec);font-size:.75rem;transition:all .2s}
+.table-actions button:hover{border-color:var(--primary);color:var(--primary)}.table-actions button.btn-del:hover{border-color:var(--danger);color:var(--danger)}
+.pagination-wrap{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);flex-wrap:wrap;gap:.5rem}
+.pagination-wrap .page-info{font-size:.85rem;color:var(--text-sec)}
+.pagination .page-link{border-radius:8px;margin:0 .15rem;border:1px solid var(--border);color:var(--text);font-size:.85rem;padding:.35rem .65rem}
+.pagination .page-link.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:1.25rem;margin-bottom:1.5rem}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow)}
+.chart-card h6{font-weight:700;margin-bottom:1rem;font-size:.95rem}
+
+/* Filters */
+.filters-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;align-items:flex-end}
+.filters-row .fg{display:flex;flex-direction:column;gap:.25rem}.filters-row label{font-size:.75rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px}
+.filters-row .form-control,.filters-row .form-select{min-width:150px;padding:.5rem .75rem;font-size:.85rem}
+
+/* Modals */
+.modal-content{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-header{border-bottom:1px solid var(--border);padding:1.25rem 1.5rem}.modal-header .modal-title{font-weight:700;font-size:1.1rem}
+.modal-body{padding:1.5rem}.modal-footer{border-top:1px solid var(--border);padding:1rem 1.5rem}
+
+/* Buttons */
+.btn-sm-custom{padding:.4rem .8rem;font-size:.82rem;border-radius:8px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-sm-primary{background:var(--primary);color:#fff}.btn-sm-primary:hover{background:var(--primary-dark)}
+.btn-sm-accent{background:var(--accent);color:#000}.btn-sm-accent:hover{background:var(--accent-dark)}
+.btn-sm-danger{background:var(--danger);color:#fff}.btn-sm-danger:hover{background:#DC2626}
+.btn-sm-outline{background:transparent;border:1px solid var(--border);color:var(--text-sec)}.btn-sm-outline:hover{border-color:var(--primary);color:var(--primary)}
+
+/* Toast */
+.toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.custom-toast{padding:.85rem 1.25rem;border-radius:12px;color:#fff;font-size:.88rem;font-weight:500;display:flex;align-items:center;gap:.6rem;animation:slideIn .3s ease;min-width:280px;box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.custom-toast.success{background:linear-gradient(135deg,#059669,#10B981)}.custom-toast.error{background:linear-gradient(135deg,#DC2626,#EF4444)}.custom-toast.info{background:linear-gradient(135deg,#0284C7,#0EA5E9)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Profile */
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}
+.profile-avatar-lg{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:800}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(2px)}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Theme toggle */
+.theme-toggle{position:relative;width:48px;height:26px;border-radius:13px;background:var(--border);border:none;cursor:pointer;transition:background .3s}
+.theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+[data-theme="dark"] .theme-toggle{background:var(--primary)}[data-theme="dark"] .theme-toggle::after{transform:translateX(22px)}
+
+/* Tab pills */
+.tab-pills{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.tab-pill{padding:.4rem 1rem;border-radius:20px;font-size:.85rem;font-weight:600;border:1px solid var(--border);background:var(--bg-card);color:var(--text-sec);cursor:pointer;transition:all .2s}
+.tab-pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-sec)}.empty-state i{font-size:3rem;margin-bottom:1rem;opacity:.3}
+.text-truncate-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.work-cell{max-width:300px}
+
+/* Setup */
+.setup-section{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#064E3B,#0D9488);padding:1rem}
+.setup-card{background:var(--bg-card);border-radius:20px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+
+@media(max-width:992px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}.hamburger{display:block}.charts-grid{grid-template-columns:1fr}}
+@media(max-width:576px){.stat-cards{grid-template-columns:1fr 1fr}.filters-row .form-control,.filters-row .form-select{min-width:100%}.content-area{padding:1rem}.table-card .card-header{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="loading-overlay" id="loadingOverlay" style="display:none"><div class="spinner"></div></div>
+
+<!-- ===== SETUP ADMIN (first time only) ===== -->
+<div id="setup-section" style="display:none">
+  <div class="setup-section">
+    <div class="setup-card">
+      <div class="text-center mb-3">
+        <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;margin-bottom:.5rem"><i class="fas fa-shield-halved"></i></div>
+        <h2>Create Admin Account</h2>
+        <p style="color:var(--text-sec);font-size:.88rem;margin-top:.5rem">First time setup — no admin exists yet</p>
+      </div>
+      <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Email</label><input type="email" class="form-control" id="setupEmail" placeholder="admin@company.com"></div>
+      <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Password</label><input type="password" class="form-control" id="setupPassword" placeholder="Min 6 characters"></div>
+      <button class="btn-sm-custom btn-sm-primary w-100" style="padding:.7rem;font-size:.95rem" onclick="handleAdminSetup()"><i class="fas fa-user-shield"></i> Create & Login</button>
+      <p class="text-center mt-3" style="font-size:.85rem"><a href="login.html" style="color:var(--primary)"><i class="fas fa-arrow-left"></i> Back to Login</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard-layout" style="display:none">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><h5><i class="fas fa-bolt" style="color:var(--accent)"></i> PTDC Admin</h5><small>Profit Traders Developers Connect</small></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="page-dashboard" onclick="navTo(this,'page-dashboard')"><i class="fas fa-th-large"></i> Dashboard</div>
+      <div class="nav-item" data-page="page-projects" onclick="navTo(this,'page-projects')"><i class="fas fa-folder-open"></i> Projects</div>
+      <div class="nav-item" data-page="page-employees" onclick="navTo(this,'page-employees')"><i class="fas fa-users"></i> Employees</div>
+      <div class="nav-item" data-page="page-assignments" onclick="navTo(this,'page-assignments')"><i class="fas fa-user-check"></i> Assignments</div>
+      <div class="nav-item" data-page="page-reports" onclick="navTo(this,'page-reports')"><i class="fas fa-clipboard-list"></i> Reports</div>
+      <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
+      <div class="nav-item" data-page="page-profile" onclick="navTo(this,'page-profile')"><i class="fas fa-user-circle"></i> Profile</div>
+    </nav>
+    <div class="sidebar-footer"><div class="nav-item" onclick="handleLogout()" style="border-left:none;padding:.7rem 0"><i class="fas fa-right-from-bracket" style="color:var(--danger)"></i> <span style="color:var(--danger)">Logout</span></div></div>
+  </aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button><h4 id="pageTitle">Dashboard</h4></div>
+      <div class="topbar-right">
+        <button class="btn-icon" title="Notifications"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none">0</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme"></button>
+        <div style="position:relative">
+          <div class="profile-btn" onclick="document.getElementById('profileDD').classList.toggle('show')">
+            <div class="avatar" id="topAvatar">A</div>
+            <span style="font-size:.85rem;font-weight:600" id="topName">Admin</span>
+            <i class="fas fa-chevron-down" style="font-size:.65rem;color:var(--text-sec)"></i>
+          </div>
+          <div class="profile-dropdown" id="profileDD">
+            <a href="#" onclick="navTo(document.querySelector('[data-page=page-profile]'),'page-profile');document.getElementById('profileDD').classList.remove('show');return false"><i class="fas fa-user"></i> Profile</a>
+            <a href="#" onclick="handleLogout();return false"><i class="fas fa-right-from-bracket"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="content-area">
+
+      <!-- Dashboard -->
+      <div id="page-dashboard" class="page active">
+        <div class="stat-cards">
+          <div class="s-card"><div class="icon-box bg-grad-teal"><i class="fas fa-users"></i></div><div class="info"><h3 id="sEmp">0</h3><p>Total Employees</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-amber"><i class="fas fa-folder-open"></i></div><div class="info"><h3 id="sProj">0</h3><p>Total Projects</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-sky"><i class="fas fa-clipboard-check"></i></div><div class="info"><h3 id="sToday">0</h3><p>Today's Reports</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-rose"><i class="fas fa-clock"></i></div><div class="info"><h3 id="sPend">0</h3><p>Pending Reports</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-violet"><i class="fas fa-calendar-check"></i></div><div class="info"><h3 id="sMonth">0</h3><p>Monthly Reports</p></div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><h6><i class="fas fa-chart-bar" style="color:var(--primary)"></i> Employee Activity (This Month)</h6><canvas id="chart1"></canvas></div>
+          <div class="chart-card"><h6><i class="fas fa-chart-pie" style="color:var(--accent)"></i> Project Status</h6><canvas id="chart2"></canvas></div>
+          <div class="chart-card" style="grid-column:1/-1"><h6><i class="fas fa-chart-line" style="color:var(--secondary)"></i> Daily Report Submissions (This Week)</h6><canvas id="chart3" height="80"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div id="page-projects" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">
+          <input type="text" class="form-control" id="searchProj" placeholder="Search projects..." style="max-width:260px" oninput="renderProjects()">
+          <button class="btn-sm-custom btn-sm-primary" style="padding:.5rem 1.2rem" onclick="openProjModal()"><i class="fas fa-plus"></i> Add Project</button>
+        </div>
+        <div class="table-card">
+          <div class="table-responsive"><table class="table"><thead><tr><th>Project Name</th><th>Code</th><th>Client</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead><tbody id="projTbody"></tbody></table></div>
+          <div id="projEmpty" class="empty-state" style="display:none"><i class="fas fa-folder-open"></i><p>No projects found</p></div>
+          <div class="pagination-wrap" id="projPag"></div>
+        </div>
+      </div>
+
+      <!-- Employees -->
+      <div id="page-employees" class="page">
+        <div style="margin-bottom:1rem"><input type="text" class="form-control" id="searchEmp" placeholder="Search employees..." style="max-width:360px" oninput="renderEmployees()"></div>
+        <div class="table-card">
+          <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>ID</th><th>Email</th><th>Mobile</th><th>Dept</th><th>Designation</th></tr></thead><tbody id="empTbody"></tbody></table></div>
+          <div id="empEmpty" class="empty-state" style="display:none"><i class="fas fa-users"></i><p>No employees found</p></div>
+          <div class="pagination-wrap" id="empPag"></div>
+        </div>
+      </div>
+
+      <!-- Assignments -->
+      <div id="page-assignments" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">
+          <input type="text" class="form-control" id="searchAssign" placeholder="Search assignments..." style="max-width:260px" oninput="renderAssignments()">
+          <button class="btn-sm-custom btn-sm-primary" style="padding:.5rem 1.2rem" onclick="openAssignModal()"><i class="fas fa-plus"></i> Assign Project</button>
+        </div>
+        <div class="table-card">
+          <div class="table-responsive"><table class="table"><thead><tr><th>Employee</th><th>ID</th><th>Project</th><th>Date</th><th>Actions</th></tr></thead><tbody id="assignTbody"></tbody></table></div>
+          <div id="assignEmpty" class="empty-state" style="display:none"><i class="fas fa-user-check"></i><p>No assignments found</p></div>
+          <div class="pagination-wrap" id="assignPag"></div>
+        </div>
+      </div>
+
+      <!-- Reports -->
+      <div id="page-reports" class="page">
+        <div class="tab-pills" id="reportTabs">
+          <div class="tab-pill active" onclick="switchTab('today',this)">Today's Reports</div>
+          <div class="tab-pill" onclick="switchTab('yesterday',this)">Yesterday</div>
+          <div class="tab-pill" onclick="switchTab('all',this)">All Reports</div>
+        </div>
+        <div class="filters-row">
+          <div class="fg"><label>Employee</label><select class="form-select" id="fEmp" onchange="renderReports()"><option value="">All</option></select></div>
+          <div class="fg"><label>Project</label><select class="form-select" id="fProj" onchange="renderReports()"><option value="">All</option></select></div>
+          <div class="fg"><label>Date</label><input type="date" class="form-control" id="fDate" onchange="renderReports()"></div>
+          <div class="fg"><label>Month</label><select class="form-select" id="fMonth" onchange="renderReports()"><option value="">All</option><option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option><option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option><option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option></select></div>
+          <div class="fg"><label>Year</label><select class="form-select" id="fYear" onchange="renderReports()"><option value="">All</option></select></div>
+          <div class="fg"><label>&nbsp;</label><button class="btn-sm-custom btn-sm-outline" onclick="clearFilters()" style="height:38px">Clear</button></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:1rem">
+          <button class="btn-sm-custom btn-sm-accent" onclick="exportExcel()"><i class="fas fa-file-excel"></i> Download Excel</button>
+        </div>
+        <div class="table-card">
+          <div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Time</th><th>Employee</th><th>ID</th><th>Project</th><th>Code</th><th class="work-cell">Work</th><th>Status</th></tr></thead><tbody id="repTbody"></tbody></table></div>
+          <div id="repEmpty" class="empty-state" style="display:none"><i class="fas fa-clipboard-list"></i><p>No reports found</p></div>
+          <div class="pagination-wrap" id="repPag"></div>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div id="page-profile" class="page">
+        <div class="profile-header">
+          <div class="profile-avatar-lg" id="profAvatar">A</div>
+          <div><h3 id="profName">Admin</h3><p style="color:var(--text-sec)" id="profEmail">admin@company.com</p><span class="badge-status badge-active">Administrator</span></div>
+        </div>
+        <div class="table-card" style="max-width:600px">
+          <div class="card-header"><h5>Change Password</h5></div>
+          <div style="padding:1.5rem">
+            <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">New Password</label><input type="password" class="form-control" id="newPass"></div>
+            <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm Password</label><input type="password" class="form-control" id="confPass"></div>
+            <button class="btn-sm-custom btn-sm-primary" style="padding:.5rem 1.5rem" onclick="changePass()">Update Password</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal fade" id="projModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="projModalTitle">Add Project</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="editProjId"><div class="row g-3">
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Project Name *</label><input type="text" class="form-control" id="pName"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Code *</label><input type="text" class="form-control" id="pCode" placeholder="PRJ-001"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Client</label><input type="text" class="form-control" id="pClient"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Status</label><select class="form-select" id="pStatus"><option>Active</option><option>Completed</option><option>Hold</option></select></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Start Date</label><input type="date" class="form-control" id="pStart"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">End Date</label><input type="date" class="form-control" id="pEnd"></div>
+    <div class="col-12"><label class="form-label" style="font-size:.85rem;font-weight:600">Description</label><textarea class="form-control" id="pDesc" rows="3"></textarea></div>
+  </div></div>
+  <div class="modal-footer"><button class="btn-sm-custom btn-sm-outline" data-bs-dismiss="modal">Cancel</button><button class="btn-sm-custom btn-sm-primary" style="padding:.5rem 1.5rem" onclick="saveProj()">Save</button></div>
+</div></div></div>
+
+<!-- Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Assign Project</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Employee *</label><select class="form-select" id="aEmp"></select></div>
+    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Project *</label><select class="form-select" id="aProj"></select></div>
+    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Date</label><input type="date" class="form-control" id="aDate"></div>
+  </div>
+  <div class="modal-footer"><button class="btn-sm-custom btn-sm-outline" data-bs-dismiss="modal">Cancel</button><button class="btn-sm-custom btn-sm-primary" style="padding:.5rem 1.5rem" onclick="saveAssign()">Assign</button></div>
+</div></div></div>
+
+<!-- Confirm Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+  <div class="modal-body text-center" style="padding:2rem"><i class="fas fa-triangle-exclamation" style="font-size:2.5rem;color:var(--danger);margin-bottom:1rem"></i><h5 id="cfmTitle">Are you sure?</h5><p id="cfmMsg" style="color:var(--text-sec);font-size:.9rem"></p></div>
+  <div class="modal-footer justify-content-center"><button class="btn-sm-custom btn-sm-outline" data-bs-dismiss="modal">Cancel</button><button class="btn-sm-custom btn-sm-danger" id="cfmBtn" style="padding:.5rem 1.5rem">Delete</button></div>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ===== FIREBASE ===== */
+const firebaseConfig={apiKey:"AIzaSyDgLbow32QrQVq0lj8q7htfQrX80W8x-OU",authDomain:"workreports-5ed68.firebaseapp.com",projectId:"workreports-5ed68",storageBucket:"workreports-5ed68.firebasestorage.app",messagingSenderId:"696550085897",appId:"1:696550085897:web:5dd34faeb34a100318afd8",measurementId:"G-J3ML7PBLDS"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.database();
+
+/* ===== STATE ===== */
+let CU=null,allP={},allE={},allA={},allR={},rptTab='today';
+let pPg=1,ePg=1,aPg=1,rPg=1;const PS=10;
+let c1=null,c2=null,c3=null;
+
+/* ===== UTILS ===== */
+function toast(m,t='info'){const c=document.getElementById('toastContainer');const ic={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};const d=document.createElement('div');d.className=`custom-toast ${t}`;d.innerHTML=`<i class="fas ${ic[t]||ic.info}"></i> ${m}`;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';d.style.transform='translateX(100%)';d.style.transition='all .3s';setTimeout(()=>d.remove(),300)},3500)}
+function showL(){document.getElementById('loadingOverlay').style.display='flex'}
+function hideL(){document.getElementById('loadingOverlay').style.display='none'}
+function fmtD(d){if(!d)return'';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d}
+function todayS(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function yestS(){const d=new Date();d.setDate(d.getDate()-1);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function curM(){return String(new Date().getMonth()+1).padStart(2,'0')}
+function curY(){return String(new Date().getFullYear())}
+function genId(){return db.ref().push().key}
+function initials(n){return n?n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2):'?'}
+function pag(arr,pg,sz){const st=(pg-1)*sz;return arr.slice(st,st+sz)}
+function pagHTML(cid,total,pg,fn){const ct=document.getElementById(cid);const tp=Math.max(1,Math.ceil(total/PS));if(total<=PS){ct.innerHTML=`<span class="page-info">${total} record(s)</span>`;return}let h=`<span class="page-info">${(pg-1)*PS+1}-${Math.min(pg*PS,total)} of ${total}</span><nav><ul class="pagination pagination-sm mb-0">`;h+=`<li class="page-item ${pg===1?'disabled':''}"><a class="page-link" href="#" onclick="${fn}(${pg-1});return false"><i class="fas fa-chevron-left"></i></a></li>`;for(let i=1;i<=tp;i++){if(tp>7&&i>2&&i<tp-1&&Math.abs(i-pg)>1){if(i===3||i===tp-2)h+=`<li class="page-item disabled"><a class="page-link">...</a></li>`;continue}h+=`<li class="page-item ${i===pg?'active':''}"><a class="page-link" href="#" onclick="${fn}(${i});return false">${i}</a></li>`}h+=`<li class="page-item ${pg===tp?'disabled':''}"><a class="page-link" href="#" onclick="${fn}(${pg+1});return false"><i class="fas fa-chevron-right"></i></a></li></ul></nav>`;ct.innerHTML=h}
+
+/* ===== THEME ===== */
+function toggleTheme(){const h=document.documentElement;const n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('ptdc-theme',n);renderCharts()}
+const st=localStorage.getItem('ptdc-theme');if(st)document.documentElement.setAttribute('data-theme',st);
+
+/* ===== NAV ===== */
+function navTo(el,pid){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.content-area .page').forEach(p=>p.classList.remove('active'));document.getElementById(pid).classList.add('active');const t={'page-dashboard':'Dashboard','page-projects':'Projects','page-employees':'Employees','page-assignments':'Assignments','page-reports':'Reports','page-profile':'Profile'};document.getElementById('pageTitle').textContent=t[pid]||'Dashboard';if(window.innerWidth<=992){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('show')}if(pid==='page-dashboard')loadDash();if(pid==='page-projects')renderProjects();if(pid==='page-employees')renderEmployees();if(pid==='page-assignments')renderAssignments();if(pid==='page-reports'){popFilters();renderReports()}}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('show')}
+document.addEventListener('click',e=>{if(!e.target.closest('.profile-btn')&&!e.target.closest('.profile-dropdown'))document.getElementById('profileDD').classList.remove('show')});
+
+/* ===== AUTH: CHECK ON LOAD ===== */
+auth.onAuthStateChanged(async user=>{
+  if(!user){window.location.href='login.html';return}
+  /* Verify admin */
+  const snap=await db.ref('admins/'+user.uid).once('value');
+  if(!snap.exists()){await auth.signOut();window.location.href='login.html';return}
+  CU=user;initDash();
+});
+
+/* ===== ADMIN SETUP (first time) ===== */
+async function checkSetup(){
+  const snap=await db.ref('admins').limitToFirst(1).once('value');
+  if(!snap.exists()){document.getElementById('setup-section').style.display='block';return}
+  document.getElementById('setup-section').style.display='none';
+  document.getElementById('dashboard-layout').style.display='flex';
+}
+async function handleAdminSetup(){
+  const email=document.getElementById('setupEmail').value.trim();
+  const pass=document.getElementById('setupPassword').value;
+  if(!email||!pass){toast('Fill all fields','error');return}
+  if(pass.length<6){toast('Password min 6 chars','error');return}
+  showL();
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await db.ref('admins/'+cred.user.uid).set({email,createdAt:Date.now()});
+    CU=cred.user;
+    document.getElementById('setup-section').style.display='none';
+    document.getElementById('dashboard-layout').style.display='flex';
+    initDash();
+    hideL();toast('Admin created!','success');
+  }catch(err){hideL();toast(err.message,'error')}
+}
+
+/* ===== INIT DASHBOARD ===== */
+function initDash(){
+  const name=CU.email.split('@')[0];
+  document.getElementById('topName').textContent=name;
+  document.getElementById('topAvatar').textContent=initials(name);
+  document.getElementById('profName').textContent=name;
+  document.getElementById('profEmail').textContent=CU.email;
+  document.getElementById('profAvatar').textContent=initials(name);
+  loadData();loadDash();
+}
+function loadData(){
+  db.ref('projects').on('value',s=>{allP=s.val()||{}});
+  db.ref('employees').on('value',s=>{allE=s.val()||{}});
+  db.ref('assignments').on('value',s=>{allA=s.val()||{}});
+  db.ref('reports').on('value',s=>{allR=s.val()||{};updateBadge()});
+}
+function updateBadge(){const t=todayS();let c=0;Object.values(allR).forEach(r=>{if(r.createdDate===t)c++});const b=document.getElementById('notifBadge');if(c>0){b.style.display='flex';b.textContent=c>99?'99+':c}else b.style.display='none'}
+
+/* ===== DASHBOARD STATS ===== */
+function loadDash(){
+  const ec=Object.keys(allE).length,pc=Object.keys(allP).length,t=todayS(),m=curM(),y=curY();
+  let tc=0,mc=0;Object.values(allR).forEach(r=>{if(r.createdDate===t)tc++;if(r.month===m&&r.year===y)mc++});
+  const ae=new Set(),re=new Set();
+  Object.values(allA).forEach(a=>{if(allP[a.projectId]?.status==='Active')ae.add(a.employeeId)});
+  Object.values(allR).forEach(r=>{if(r.createdDate===t)re.add(r.employeeId)});
+  document.getElementById('sEmp').textContent=ec;
+  document.getElementById('sProj').textContent=pc;
+  document.getElementById('sToday').textContent=tc;
+  document.getElementById('sPend').textContent=Math.max(0,ae.size-re.size);
+  document.getElementById('sMonth').textContent=mc;
+  renderCharts();
+}
+
+/* ===== CHARTS ===== */
+function renderCharts(){
+  const dk=document.documentElement.getAttribute('data-theme')==='dark';
+  const gc=dk?'rgba(255,255,255,.08)':'rgba(0,0,0,.06)';
+  const tc=dk?'#94A3B8':'#64748B';
+  const m=curM(),y=curY();
+  /* Bar: Employee activity */
+  const ec={};Object.values(allR).forEach(r=>{if(r.month===m&&r.year===y)ec[r.employeeName]=(ec[r.employeeName]||0)+1});
+  const el=Object.keys(ec).slice(0,10),ed=el.map(n=>ec[n]);
+  if(c1)c1.destroy();
+  c1=new Chart(document.getElementById('chart1'),{type:'bar',data:{labels:el.length?el:['No Data'],datasets:[{label:'Reports',data:ed.length?ed:[0],backgroundColor:'rgba(13,148,136,.7)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:11}},grid:{display:false}},y:{ticks:{color:tc},grid:{color:gc}}}}});
+  /* Doughnut: Project status */
+  let ac=0,co=0,ho=0;Object.values(allP).forEach(p=>{if(p.status==='Active')ac++;else if(p.status==='Completed')co++;else ho++});
+  if(c2)c2.destroy();
+  c2=new Chart(document.getElementById('chart2'),{type:'doughnut',data:{labels:['Active','Completed','Hold'],datasets:[{data:[ac,co,ho],backgroundColor:['#0D9488','#0EA5E9','#F59E0B'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:tc,padding:15,usePointStyle:true,pointStyleWidth:10}}}}});
+  /* Line: Daily this week */
+  const wd=[],wdd=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;wd.push(d.toLocaleDateString('en',{weekday:'short'}));let cn=0;Object.values(allR).forEach(r=>{if(r.createdDate===ds)cn++});wdd.push(cn)}
+  if(c3)c3.destroy();
+  c3=new Chart(document.getElementById('chart3'),{type:'line',data:{labels:wd,datasets:[{label:'Reports',data:wdd,borderColor:'#059669',backgroundColor:'rgba(5,150,105,.1)',fill:true,tension:.4,pointBackgroundColor:'#059669',pointRadius:5,pointHoverRadius:7}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc},grid:{display:false}},y:{ticks:{color:tc,stepSize:1},grid:{color:gc},beginAtZero:true}}}});
+}
+
+/* ===== PROJECTS ===== */
+function openProjModal(id=null){
+  ['editProjId','pName','pCode','pClient','pStart','pEnd','pDesc'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('pStatus').value='Active';
+  document.getElementById('projModalTitle').textContent='Add Project';
+  if(id&&allP[id]){const p=allP[id];document.getElementById('editProjId').value=id;document.getElementById('pName').value=p.name||'';document.getElementById('pCode').value=p.code||'';document.getElementById('pClient').value=p.clientName||'';document.getElementById('pStatus').value=p.status||'Active';document.getElementById('pStart').value=p.startDate||'';document.getElementById('pEnd').value=p.endDate||'';document.getElementById('pDesc').value=p.description||'';document.getElementById('projModalTitle').textContent='Edit Project'}
+  new bootstrap.Modal(document.getElementById('projModal')).show();
+}
+async function saveProj(){
+  const name=document.getElementById('pName').value.trim(),code=document.getElementById('pCode').value.trim();
+  if(!name||!code){toast('Name and Code required','error');return}
+  const data={name,code,clientName:document.getElementById('pClient').value.trim(),status:document.getElementById('pStatus').value,startDate:document.getElementById('pStart').value,endDate:document.getElementById('pEnd').value,description:document.getElementById('pDesc').value.trim(),updatedAt:Date.now()};
+  showL();
+  try{const eid=document.getElementById('editProjId').value;if(eid){await db.ref('projects/'+eid).update(data);toast('Updated','success')}else{data.createdAt=Date.now();await db.ref('projects/'+genId()).set(data);toast('Created','success')}bootstrap.Modal.getInstance(document.getElementById('projModal')).hide();hideL()}catch(e){hideL();toast(e.message,'error')}
+}
+function delProj(id){const p=allP[id];document.getElementById('cfmTitle').textContent='Delete Project?';document.getElementById('cfmMsg').textContent=`Delete "${p?.name}"?`;document.getElementById('cfmBtn').onclick=async()=>{showL();try{await db.ref('projects/'+id).remove();bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();hideL();toast('Deleted','success')}catch(e){hideL();toast(e.message,'error')}};new bootstrap.Modal(document.getElementById('confirmModal')).show()}
+function renderProjects(){
+  const s=(document.getElementById('searchProj').value||'').toLowerCase();
+  let l=Object.entries(allP).filter(([,p])=>!s||(p.name||'').toLowerCase().includes(s)||(p.code||'').toLowerCase().includes(s)||(p.clientName||'').toLowerCase().includes(s));
+  const t=l.length;l=pag(l,pPg,PS);const tb=document.getElementById('projTbody'),em=document.getElementById('projEmpty');
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(([id,p])=>{const sc=p.status==='Active'?'badge-active':p.status==='Completed'?'badge-completed':'badge-hold';return`<tr><td><strong>${p.name||''}</strong></td><td><code>${p.code||''}</code></td><td>${p.clientName||'-'}</td><td>${fmtD(p.startDate)}</td><td>${fmtD(p.endDate)}</td><td><span class="badge-status ${sc}">${p.status||'Active'}</span></td><td><div class="table-actions"><button onclick="openProjModal('${id}')"><i class="fas fa-pen"></i></button><button class="btn-del" onclick="delProj('${id}')"><i class="fas fa-trash"></i></button></div></td></tr>`}).join('')}
+  pagHTML('projPag',t,pPg,'goPP');
+}
+function goPP(p){pPg=Math.max(1,p);renderProjects()}
+
+/* ===== EMPLOYEES ===== */
+function renderEmployees(){
+  const s=(document.getElementById('searchEmp').value||'').toLowerCase();
+  let l=Object.entries(allE).filter(([,e])=>!s||(e.fullName||'').toLowerCase().includes(s)||(e.employeeId||'').toLowerCase().includes(s)||(e.department||'').toLowerCase().includes(s));
+  const t=l.length;l=pag(l,ePg,PS);const tb=document.getElementById('empTbody'),em=document.getElementById('empEmpty');
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(([,e])=>`<tr><td><strong>${e.fullName||''}</strong></td><td><code>${e.employeeId||''}</code></td><td>${e.email||''}</td><td>${e.mobile||''}</td><td>${e.department||''}</td><td>${e.designation||''}</td></tr>`).join('')}
+  pagHTML('empPag',t,ePg,'goEP');
+}
+function goEP(p){ePg=Math.max(1,p);renderEmployees()}
+
+/* ===== ASSIGNMENTS ===== */
+function openAssignModal(){
+  const es=document.getElementById('aEmp');es.innerHTML='<option value="">Select Employee</option>';
+  Object.entries(allE).forEach(([id,e])=>{es.innerHTML+=`<option value="${id}" data-n="${e.fullName}" data-eid="${e.employeeId}">${e.fullName} (${e.employeeId})</option>`});
+  const ps=document.getElementById('aProj');ps.innerHTML='<option value="">Select Project</option>';
+  Object.entries(allP).forEach(([id,p])=>{ps.innerHTML+=`<option value="${id}" data-n="${p.name}">${p.name} (${p.code})</option>`});
+  document.getElementById('aDate').value=todayS();
+  new bootstrap.Modal(document.getElementById('assignModal')).show();
+}
+async function saveAssign(){
+  const eid=document.getElementById('aEmp').value,pid=document.getElementById('aProj').value,dt=document.getElementById('aDate').value;
+  if(!eid||!pid){toast('Select employee and project','error');return}
+  if(Object.values(allA).some(a=>a.employeeId===eid&&a.projectId===pid)){toast('Already assigned','error');return}
+  const eo=document.getElementById('aEmp').selectedOptions[0],po=document.getElementById('aProj').selectedOptions[0];
+  showL();
+  try{await db.ref('assignments/'+genId()).set({employeeId:eid,employeeName:eo.dataset.n||'',employeeCode:eo.dataset.eid||'',projectId:pid,projectName:po.dataset.n||'',assignedDate:dt,createdAt:Date.now()});bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();hideL();toast('Assigned','success')}catch(e){hideL();toast(e.message,'error')}
+}
+function rmAssign(id){const a=allA[id];document.getElementById('cfmTitle').textContent='Remove Assignment?';document.getElementById('cfmMsg').textContent=`Remove ${a?.employeeName} from ${a?.projectName}?`;document.getElementById('cfmBtn').onclick=async()=>{showL();try{await db.ref('assignments/'+id).remove();bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();hideL();toast('Removed','success')}catch(e){hideL();toast(e.message,'error')}};new bootstrap.Modal(document.getElementById('confirmModal')).show()}
+function renderAssignments(){
+  const s=(document.getElementById('searchAssign').value||'').toLowerCase();
+  let l=Object.entries(allA).filter(([,a])=>!s||(a.employeeName||'').toLowerCase().includes(s)||(a.projectName||'').toLowerCase().includes(s));
+  const t=l.length;l=pag(l,aPg,PS);const tb=document.getElementById('assignTbody'),em=document.getElementById('assignEmpty');
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(([id,a])=>`<tr><td><strong>${a.employeeName||''}</strong></td><td><code>${a.employeeCode||''}</code></td><td>${a.projectName||''}</td><td>${fmtD(a.assignedDate)}</td><td><div class="table-actions"><button class="btn-del" onclick="rmAssign('${id}')"><i class="fas fa-trash"></i></button></div></td></tr>`).join('')}
+  pagHTML('assignPag',t,aPg,'goAP');
+}
+function goAP(p){aPg=Math.max(1,p);renderAssignments()}
+
+/* ===== REPORTS ===== */
+function popFilters(){
+  const es=document.getElementById('fEmp'),ev=es.value;es.innerHTML='<option value="">All</option>';Object.values(allE).forEach(e=>{es.innerHTML+=`<option value="${e.uid}" ${e.uid===ev?'selected':''}>${e.fullName}</option>`});
+  const ps=document.getElementById('fProj'),pv=ps.value;ps.innerHTML='<option value="">All</option>';Object.entries(allP).forEach(([id,p])=>{ps.innerHTML+=`<option value="${id}" ${id===pv?'selected':''}>${p.name}</option>`});
+  const ys=document.getElementById('fYear'),yv=ys.value;ys.innerHTML='<option value="">All</option>';const yrs=new Set();Object.values(allR).forEach(r=>{if(r.year)yrs.add(r.year)});yrs.add(curY());[...yrs].sort().forEach(y=>{ys.innerHTML+=`<option value="${y}" ${y===yv?'selected':''}>${y}</option>`});
+}
+function switchTab(m,el){rptTab=m;document.querySelectorAll('#reportTabs .tab-pill').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById('fDate').value=m==='today'?todayS():m==='yesterday'?yestS():'';rPg=1;renderReports()}
+function clearFilters(){document.getElementById('fEmp').value='';document.getElementById('fProj').value='';document.getElementById('fDate').value='';document.getElementById('fMonth').value='';document.getElementById('fYear').value='';rptTab='today';document.querySelectorAll('#reportTabs .tab-pill').forEach((t,i)=>t.classList.toggle('active',i===0));document.getElementById('fDate').value=todayS();rPg=1;renderReports()}
+function getFiltered(){
+  const fe=document.getElementById('fEmp').value,fp=document.getElementById('fProj').value,fd=document.getElementById('fDate').value,fm=document.getElementById('fMonth').value,fy=document.getElementById('fYear').value;
+  return Object.entries(allR).filter(([,r])=>{
+    if(rptTab==='today'&&!fd&&r.createdDate!==todayS())return false;
+    if(rptTab==='yesterday'&&!fd&&r.createdDate!==yestS())return false;
+    if(fe&&r.employeeId!==fe)return false;if(fp&&r.projectId!==fp)return false;if(fd&&r.createdDate!==fd)return false;if(fm&&r.month!==fm)return false;if(fy&&r.year!==fy)return false;return true;
+  }).map(([id,r])=>({id,...r})).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+}
+function renderReports(){
+  let l=getFiltered();const t=l.length;l=pag(l,rPg,PS);const tb=document.getElementById('repTbody'),em=document.getElementById('repEmpty');
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(r=>{const p=allP[r.projectId]||{};return`<tr><td style="white-space:nowrap">${fmtD(r.createdDate)}</td><td style="white-space:nowrap">${r.createdTime||''}</td><td><strong>${r.employeeName||''}</strong></td><td><code>${r.employeeCode||''}</code></td><td>${r.projectName||''}</td><td><code>${p.code||''}</code></td><td class="work-cell text-truncate-2">${(r.workDetails||'').replace(/\n/g,'<br>')}</td><td><span class="badge-status badge-active">Submitted</span></td></tr>`}).join('')}
+  pagHTML('repPag',t,rPg,'goRP');
+}
+function goRP(p){rPg=Math.max(1,p);renderReports()}
+function exportExcel(){
+  const l=getFiltered();if(!l.length){toast('No data','error');return}
+  const rows=l.map(r=>({'Date':fmtD(r.createdDate),'Time':r.createdTime||'','Employee':r.employeeName||'','Employee ID':r.employeeCode||'','Project':r.projectName||'','Project Code':(allP[r.projectId]||{}).code||'','Work Details':(r.workDetails||'').replace(/\n/g,' | ')}));
+  const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:12},{wch:8},{wch:20},{wch:12},{wch:20},{wch:12},{wch:60}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Reports');XLSX.writeFile(wb,`PTDC_Reports_${todayS()}.xlsx`);toast('Excel downloaded','success');
+}
+
+/* ===== PROFILE ===== */
+async function changePass(){const np=document.getElementById('newPass').value,cp=document.getElementById('confPass').value;if(!np||!cp){toast('Fill all fields','error');return}if(np!==cp){toast('Passwords mismatch','error');return}if(np.length<6){toast('Min 6 chars','error');return}showL();try{await CU.updatePassword(np);hideL();toast('Password updated','success');document.getElementById('newPass').value='';document.getElementById('confPass').value=''}catch(e){hideL();toast(e.message,'error')}}
+
+/* ===== LOGOUT ===== */
+async function handleLogout(){try{await auth.signOut()}catch(e){}window.location.href='login.html'}
+
+/* ===== INIT: Check if admin exists ===== */
+checkSetup();
+</script>
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Dashboard - Profit Traders Developers Connect</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root{--primary:#0D9488;--primary-dark:#0F766E;--primary-light:#14B8A6;--secondary:#059669;--accent:#F59E0B;--accent-dark:#D97706;--danger:#EF4444;--success:#10B981;--info:#06B6D4;--bg:#F1F5F9;--bg-card:#FFFFFF;--bg-sidebar:#FFFFFF;--text:#0F172A;--text-sec:#64748B;--border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.08);--sidebar-w:260px}
+[data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--bg-sidebar:#111827;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;overflow-x:hidden}
+h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+.page{display:none}.page.active{display:block}
+.sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;z-index:1000;transition:transform .3s;display:flex;flex-direction:column;overflow-y:auto}
+.sidebar-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)}
+.sidebar-header h5{font-size:1rem;color:var(--primary);font-weight:800}
+.sidebar-header small{color:var(--text-sec);font-size:.75rem}
+.sidebar-nav{flex:1;padding:1rem 0}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1.5rem;color:var(--text-sec);cursor:pointer;transition:all .2s;font-size:.9rem;font-weight:500;border-left:3px solid transparent}
+.nav-item:hover{color:var(--primary);background:rgba(13,148,136,.05)}
+.nav-item.active{color:var(--primary);background:rgba(13,148,136,.08);border-left-color:var(--primary);font-weight:600}
+.nav-item i{width:20px;text-align:center}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid var(--border)}
+.main-content{margin-left:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:900}
+.topbar-left{display:flex;align-items:center;gap:1rem}
+.topbar-left h4{font-size:1.1rem;font-weight:700;margin:0}
+.hamburger{display:none;background:none;border:none;font-size:1.3rem;color:var(--text);cursor:pointer}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+.btn-icon{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-sec);transition:all .2s}
+.btn-icon:hover{color:var(--primary);border-color:var(--primary)}
+.profile-btn{display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.25rem .5rem;border-radius:10px;transition:background .2s}
+.profile-btn:hover{background:var(--bg)}
+.profile-btn .avatar{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem}
+.profile-dropdown{position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.12);min-width:180px;padding:.5rem 0;display:none;z-index:999}
+.profile-dropdown.show{display:block}
+.profile-dropdown a{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;color:var(--text-sec);font-size:.85rem;transition:all .15s}
+.profile-dropdown a:hover{background:var(--bg);color:var(--primary)}
+.content-area{flex:1;padding:1.5rem}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999}
+.sidebar-overlay.show{display:block}
+.welcome-card{background:linear-gradient(135deg,#0D9488,#059669);border-radius:20px;padding:2rem;color:#fff;margin-bottom:1.5rem;position:relative;overflow:hidden}
+.welcome-card::after{content:'';position:absolute;right:-30px;bottom:-30px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08)}
+.welcome-card::before{content:'';position:absolute;right:60px;top:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05)}
+.welcome-card h2{font-size:1.5rem;margin-bottom:.25rem}
+.welcome-card p{opacity:.8;font-size:.95rem}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-bottom:1.5rem}
+.s-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;display:flex;align-items:center;gap:1rem;transition:all .3s;box-shadow:var(--shadow)}
+.s-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.1)}
+.s-card .icon-box{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.s-card .info h3{font-size:1.5rem;font-weight:800;margin-bottom:.1rem}
+.s-card .info p{color:var(--text-sec);font-size:.8rem;margin:0}
+.bg-grad-teal{background:linear-gradient(135deg,#0D9488,#14B8A6);color:#fff}
+.bg-grad-amber{background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff}
+.bg-grad-sky{background:linear-gradient(135deg,#0EA5E9,#38BDF8);color:#fff}
+.bg-grad-violet{background:linear-gradient(135deg,#8B5CF6,#A78BFA);color:#fff}
+.proj-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem;margin-bottom:1.5rem}
+.proj-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow);transition:all .3s}
+.proj-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.1)}
+.proj-card h5{font-size:1rem;font-weight:700;margin-bottom:.25rem}
+.proj-card .code{color:var(--primary);font-size:.85rem;font-weight:600;margin-bottom:.5rem}
+.proj-card .client{color:var(--text-sec);font-size:.85rem;margin-bottom:.75rem}
+.proj-card .actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.work-entry{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:2rem;box-shadow:var(--shadow);max-width:700px}
+.work-entry .proj-info{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.work-entry .proj-info h5{font-size:1rem;margin-bottom:.15rem}
+.work-entry .proj-info p{color:var(--text-sec);font-size:.85rem;margin:0}
+textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
+.hist-month{margin-bottom:1.5rem}
+.hist-month-hdr{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .2s;box-shadow:var(--shadow)}
+.hist-month-hdr:hover{border-color:var(--primary)}
+.hist-month-hdr i{transition:transform .2s}
+.hist-month-hdr.open i{transform:rotate(180deg)}
+.hist-dates{display:none;padding:.75rem 0 0 .75rem}
+.hist-dates.open{display:block}
+.hist-date{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-left:3px solid var(--border);margin-left:.5rem;transition:all .2s;cursor:pointer;border-radius:0 8px 8px 0}
+.hist-date:hover{border-left-color:var(--primary);background:rgba(13,148,136,.03)}
+.hist-date .dt{font-weight:600;font-size:.9rem}
+.hist-date .tm{color:var(--text-sec);font-size:.8rem}
+.hist-date-detail{display:none;padding:.5rem 0 .5rem 1.5rem}
+.hist-date-detail.open{display:block}
+.work-detail{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow);margin-bottom:1rem}
+.work-detail .meta{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;color:var(--text-sec);font-size:.85rem}
+.work-detail .meta span i{margin-right:.3rem;color:var(--primary)}
+.work-detail .work-text{line-height:1.8;white-space:pre-wrap;font-size:.92rem}
+.btn-sm-custom{padding:.4rem .8rem;font-size:.82rem;border-radius:8px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-sm-primary{background:var(--primary);color:#fff}
+.btn-sm-primary:hover{background:var(--primary-dark)}
+.btn-sm-accent{background:var(--accent);color:#000}
+.btn-sm-accent:hover{background:var(--accent-dark)}
+.btn-sm-outline{background:transparent;border:1px solid var(--border);color:var(--text-sec)}
+.btn-sm-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-back{display:inline-flex;align-items:center;gap:.4rem;color:var(--primary);font-weight:600;font-size:.9rem;cursor:pointer;background:none;border:none;padding:.25rem 0;margin-bottom:1rem;transition:all .2s}
+.btn-back:hover{color:var(--primary-dark)}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.chart-card h6{font-weight:700;margin-bottom:1rem;font-size:.95rem}
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}
+.profile-avatar-lg{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:800}
+.profile-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;max-width:600px}
+.profile-fields .pf-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem}
+.profile-fields .pf-item label{font-size:.75rem;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:.15rem}
+.profile-fields .pf-item span{font-weight:600;font-size:.9rem}
+.toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.custom-toast{padding:.85rem 1.25rem;border-radius:12px;color:#fff;font-size:.88rem;font-weight:500;display:flex;align-items:center;gap:.6rem;animation:slideIn .3s ease;min-width:280px;box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.custom-toast.success{background:linear-gradient(135deg,#059669,#10B981)}
+.custom-toast.error{background:linear-gradient(135deg,#DC2626,#EF4444)}
+.custom-toast.info{background:linear-gradient(135deg,#0284C7,#0EA5E9)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(2px)}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.theme-toggle{position:relative;width:48px;height:26px;border-radius:13px;background:var(--border);border:none;cursor:pointer;transition:background .3s}
+.theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+[data-theme="dark"] .theme-toggle{background:var(--primary)}
+[data-theme="dark"] .theme-toggle::after{transform:translateX(22px)}
+.badge-status{padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-active{background:rgba(16,185,129,.12);color:#059669}
+.badge-completed{background:rgba(14,165,233,.12);color:#0284C7}
+.badge-hold{background:rgba(245,158,11,.12);color:#D97706}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-sec)}
+.empty-state i{font-size:3rem;margin-bottom:1rem;opacity:.3}
+.form-control,.form-select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.7rem 1rem;font-size:.9rem;transition:border .2s}
+.form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
+.table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.table-card .card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border)}
+.table-card .card-header h5{font-size:1.05rem;font-weight:700;margin:0}
+@media(max-width:992px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main-content{margin-left:0}
+  .hamburger{display:block}
+}
+@media(max-width:576px){
+  .stat-cards{grid-template-columns:1fr 1fr}
+  .proj-cards{grid-template-columns:1fr}
+  .content-area{padding:1rem}
+  .welcome-card{padding:1.5rem}
+  .welcome-card h2{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="loading-overlay" id="loadingOverlay" style="display:none"><div class="spinner"></div></div>
+
+<!-- ===== DASHBOARD LAYOUT ===== -->
+<div id="dashboard-layout" style="display:none">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h5><i class="fas fa-bolt" style="color:var(--accent)"></i> PTDC Employee</h5>
+      <small>Profit Traders Developers Connect</small>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="page-home" onclick="navTo(this,'page-home')"><i class="fas fa-th-large"></i> Dashboard</div>
+      <div class="nav-item" data-page="page-work" onclick="navTo(this,'page-work')"><i class="fas fa-pen-to-square"></i> My Work</div>
+      <div class="nav-item" data-page="page-history" onclick="navTo(this,'page-history')"><i class="fas fa-clock-rotate-left"></i> Work History</div>
+      <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
+      <div class="nav-item" data-page="page-profile" onclick="navTo(this,'page-profile')"><i class="fas fa-user-circle"></i> Profile</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="handleLogout()" style="border-left:none;padding:.7rem 0">
+        <i class="fas fa-right-from-bracket" style="color:var(--danger)"></i>
+        <span style="color:var(--danger)">Logout</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <h4 id="pageTitle">Dashboard</h4>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme"></button>
+        <div style="position:relative">
+          <div class="profile-btn" onclick="document.getElementById('profileDD').classList.toggle('show')">
+            <div class="avatar" id="topAvatar">E</div>
+            <span style="font-size:.85rem;font-weight:600" id="topName">Employee</span>
+            <i class="fas fa-chevron-down" style="font-size:.65rem;color:var(--text-sec)"></i>
+          </div>
+          <div class="profile-dropdown" id="profileDD">
+            <a href="#" onclick="navTo(document.querySelector('[data-page=page-profile]'),'page-profile');document.getElementById('profileDD').classList.remove('show');return false"><i class="fas fa-user"></i> Profile</a>
+            <a href="#" onclick="handleLogout();return false"><i class="fas fa-right-from-bracket"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-area">
+
+      <!-- ========== HOME / DASHBOARD ========== -->
+      <div id="page-home" class="page active">
+        <div class="welcome-card">
+          <h2 id="welcomeName">Welcome!</h2>
+          <p id="welcomeSub">Here is your work summary</p>
+        </div>
+        <div class="stat-cards">
+          <div class="s-card"><div class="icon-box bg-grad-teal"><i class="fas fa-folder-open"></i></div><div class="info"><h3 id="sProj">0</h3><p>Assigned Projects</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-amber"><i class="fas fa-clipboard-check"></i></div><div class="info"><h3 id="sTotal">0</h3><p>Total Reports</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-sky"><i class="fas fa-calendar-check"></i></div><div class="info"><h3 id="sMonth">0</h3><p>This Month</p></div></div>
+          <div class="s-card"><div class="icon-box bg-grad-violet"><i class="fas fa-fire"></i></div><div class="info"><h3 id="sStreak">0</h3><p>Day Streak</p></div></div>
+        </div>
+        <div class="chart-card">
+          <h6><i class="fas fa-chart-bar" style="color:var(--primary)"></i> My Reports (Last 7 Days)</h6>
+          <canvas id="myChart" height="80"></canvas>
+        </div>
+        <h5 style="font-weight:700;margin-bottom:1rem"><i class="fas fa-folder-open" style="color:var(--primary)"></i> My Projects</h5>
+        <div class="proj-cards" id="myProjCards"></div>
+        <div id="homeProjEmpty" class="empty-state" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned yet. Contact your admin.</p></div>
+      </div>
+
+      <!-- ========== MY WORK ========== -->
+      <div id="page-work" class="page">
+        <div id="workProjList">
+          <h5 style="font-weight:700;margin-bottom:1rem"><i class="fas fa-pen-to-square" style="color:var(--primary)"></i> Select a Project to Add Work</h5>
+          <div class="proj-cards" id="workProjCards"></div>
+          <div id="workProjEmpty" class="empty-state" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned yet. Contact your admin.</p></div>
+        </div>
+        <div id="workEntryForm" style="display:none">
+          <button class="btn-back" onclick="backToWorkList()"><i class="fas fa-arrow-left"></i> Back to Projects</button>
+          <div class="work-entry">
+            <div class="proj-info">
+              <h5 id="weProjName"></h5>
+              <p id="weProjClient"></p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:.85rem;font-weight:600">Today's Work Details *</label>
+              <textarea class="form-control" id="workText" placeholder="Enter your work point-wise:&#10;&#10;* Fixed login issue&#10;* Integrated Firebase&#10;* Created dashboard UI&#10;* Tested API endpoints"></textarea>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn-sm-custom btn-sm-primary" style="padding:.6rem 1.5rem;font-size:.9rem" onclick="submitWork()"><i class="fas fa-paper-plane"></i> Submit Work</button>
+              <button class="btn-sm-custom btn-sm-outline" style="padding:.6rem 1.2rem;font-size:.9rem" onclick="backToWorkList()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== WORK HISTORY ========== -->
+      <div id="page-history" class="page">
+        <h5 style="font-weight:700;margin-bottom:1rem"><i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i> Work History</h5>
+        <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-sec);text-transform:uppercase">Month</label>
+            <select class="form-select" id="hMonth" onchange="loadHistory()" style="min-width:140px">
+              <option value="">All</option>
+              <option value="01">January</option><option value="02">February</option>
+              <option value="03">March</option><option value="04">April</option>
+              <option value="05">May</option><option value="06">June</option>
+              <option value="07">July</option><option value="08">August</option>
+              <option value="09">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-sec);text-transform:uppercase">Year</label>
+            <select class="form-select" id="hYear" onchange="loadHistory()" style="min-width:120px">
+              <option value="">All</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-sec);text-transform:uppercase">Project</label>
+            <select class="form-select" id="hProj" onchange="loadHistory()" style="min-width:180px">
+              <option value="">All Projects</option>
+            </select>
+          </div>
+        </div>
+        <div id="historyContainer"></div>
+        <div id="historyEmpty" class="empty-state" style="display:none"><i class="fas fa-clock-rotate-left"></i><p>No work history found</p></div>
+      </div>
+
+      <!-- ========== PROFILE ========== -->
+      <div id="page-profile" class="page">
+        <div class="profile-header">
+          <div class="profile-avatar-lg" id="profAvatar">E</div>
+          <div>
+            <h3 id="profName">Employee</h3>
+            <p style="color:var(--text-sec)" id="profEmail"></p>
+            <span class="badge-status badge-active">Employee</span>
+          </div>
+        </div>
+        <div class="profile-fields" id="profFields"></div>
+        <div class="table-card" style="max-width:600px;margin-top:2rem">
+          <div class="card-header"><h5>Change Password</h5></div>
+          <div style="padding:1.5rem">
+            <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">New Password</label><input type="password" class="form-control" id="newPass"></div>
+            <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm Password</label><input type="password" class="form-control" id="confPass"></div>
+            <button class="btn-sm-custom btn-sm-primary" style="padding:.5rem 1.5rem" onclick="changePass()">Update Password</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   FIREBASE CONFIGURATION
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDgLbow32QrQVq0lj8q7htfQrX80W8x-OU",
+  authDomain: "workreports-5ed68.firebaseapp.com",
+  projectId: "workreports-5ed68",
+  storageBucket: "workreports-5ed68.firebasestorage.app",
+  messagingSenderId: "696550085897",
+  appId: "1:696550085897:web:5dd34faeb34a100318afd8",
+  measurementId: "G-J3ML7PBLDS"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+/* ============================================================
+   GLOBAL STATE
+   ============================================================ */
+let CU = null;          // Current Firebase User
+let myData = null;      // Employee data from DB
+let allP = {};           // All projects
+let myAssignments = {};  // My assignments only
+let myReports = {};      // My reports only
+let selectedProjId = null;
+let myChart = null;
+const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+/* ============================================================
+   UTILITY FUNCTIONS
+   ============================================================ */
+
+/** Show toast notification */
+function toast(m, t) {
+  t = t || 'info';
+  var c = document.getElementById('toastContainer');
+  var ic = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+  var d = document.createElement('div');
+  d.className = 'custom-toast ' + t;
+  d.innerHTML = '<i class="fas ' + (ic[t] || ic.info) + '"></i> ' + m;
+  c.appendChild(d);
+  setTimeout(function() {
+    d.style.opacity = '0';
+    d.style.transform = 'translateX(100%)';
+    d.style.transition = 'all .3s';
+    setTimeout(function() { d.remove(); }, 300);
+  }, 3500);
+}
+
+/** Show/hide loading */
+function showL() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+function hideL() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+/** Get today as YYYY-MM-DD */
+function todayS() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/** Get current month as MM */
+function curM() { return String(new Date().getMonth() + 1).padStart(2, '0'); }
+
+/** Get current year as YYYY */
+function curY() { return String(new Date().getFullYear()); }
+
+/** Generate push ID */
+function genId() { return db.ref().push().key; }
+
+/** Get initials from name */
+function initials(n) {
+  if (!n) return '?';
+  return n.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+}
+
+/** Format date as "DD Month YYYY" */
+function fmtDate(d) {
+  if (!d) return '';
+  var p = d.split('-');
+  if (p.length === 3) return p[2] + ' ' + monthNames[parseInt(p[1]) - 1] + ' ' + p[0];
+  return d;
+}
+
+/** Format date as DD/MM/YYYY */
+function fmtD(d) {
+  if (!d) return '';
+  var p = d.split('-');
+  if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+  return d;
+}
+
+/* ============================================================
+   THEME MANAGEMENT
+   ============================================================ */
+function toggleTheme() {
+  var h = document.documentElement;
+  var n = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  h.setAttribute('data-theme', n);
+  localStorage.setItem('ptdc-theme', n);
+  renderMyChart();
+}
+var savedTheme = localStorage.getItem('ptdc-theme');
+if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function navTo(el, pid) {
+  /* Update sidebar active state */
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  if (el) el.classList.add('active');
+
+  /* Show correct page */
+  document.querySelectorAll('.content-area .page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById(pid).classList.add('active');
+
+  /* Update topbar title */
+  var titles = { 'page-home': 'Dashboard', 'page-work': 'My Work', 'page-history': 'Work History', 'page-profile': 'Profile' };
+  document.getElementById('pageTitle').textContent = titles[pid] || 'Dashboard';
+
+  /* Close sidebar on mobile */
+  if (window.innerWidth <= 992) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  }
+
+  /* Load page-specific data */
+  if (pid === 'page-home') loadHome();
+  if (pid === 'page-work') loadWorkPage();
+  if (pid === 'page-history') loadHistoryPage();
+  if (pid === 'page-profile') loadProfile();
+}
+
+/** Toggle sidebar on mobile */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+/** Close profile dropdown when clicking outside */
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.profile-btn') && !e.target.closest('.profile-dropdown')) {
+    document.getElementById('profileDD').classList.remove('show');
+  }
+});
+
+/* ============================================================
+   AUTHENTICATION CHECK
+   ============================================================ */
+auth.onAuthStateChanged(async function(user) {
+  if (!user) {
+    /* Not logged in — redirect to login page */
+    window.location.href = 'login.html';
+    return;
+  }
+
+  /* Verify this user is an employee (not admin) */
+  var snap = await db.ref('employees/' + user.uid).once('value');
+  if (!snap.exists()) {
+    /* Not an employee record — sign out and redirect */
+    await auth.signOut();
+    window.location.href = 'login.html';
+    return;
+  }
+
+  /* All good — store data and initialize */
+  CU = user;
+  myData = snap.val();
+  myData.uid = user.uid;
+  initApp();
+});
+
+/* ============================================================
+   INITIALIZE APPLICATION
+   ============================================================ */
+function initApp() {
+  var n = myData.fullName || 'Employee';
+  document.getElementById('topName').textContent = n;
+  document.getElementById('topAvatar').textContent = initials(n);
+  document.getElementById('profName').textContent = n;
+  document.getElementById('profEmail').textContent = myData.email || '';
+  document.getElementById('profAvatar').textContent = initials(n);
+  document.getElementById('dashboard-layout').style.display = 'flex';
+  loadData();
+  loadHome();
+}
+
+/** Attach realtime listeners for data */
+function loadData() {
+  /* Listen for all projects (needed for project names/codes) */
+  db.ref('projects').on('value', function(s) {
+    allP = s.val() || {};
+  });
+
+  /* Listen for assignments — filter to only mine */
+  db.ref('assignments').on('value', function(s) {
+    var all = s.val() || {};
+    myAssignments = {};
+    Object.keys(all).forEach(function(id) {
+      var a = all[id];
+      if (a.employeeId === CU.uid) {
+        myAssignments[id] = a;
+      }
+    });
+  });
+
+  /* Listen for reports — filter to only mine */
+  db.ref('reports').on('value', function(s) {
+    var all = s.val() || {};
+    myReports = {};
+    Object.keys(all).forEach(function(id) {
+      var r = all[id];
+      if (r.employeeId === CU.uid) {
+        myReports[id] = r;
+      }
+    });
+  });
+}
+
+/* ============================================================
+   HOME / DASHBOARD PAGE
+   ============================================================ */
+function loadHome() {
+  var n = myData.fullName || 'Employee';
+  document.getElementById('welcomeName').textContent = 'Welcome, ' + n + '!';
+  var today = new Date();
+  var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('welcomeSub').textContent = today.toLocaleDateString('en', options);
+
+  /* Stats */
+  var projCount = Object.keys(myAssignments).length;
+  var totalReports = Object.keys(myReports).length;
+  var m = curM(), y = curY();
+  var monthCount = 0;
+  Object.values(myReports).forEach(function(r) {
+    if (r.month === m && r.year === y) monthCount++;
+  });
+
+  /* Calculate streak (consecutive days with reports ending today) */
+  var streak = 0;
+  var d = new Date();
+  for (var i = 0; i < 365; i++) {
+    var ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    var has = Object.values(myReports).some(function(r) { return r.createdDate === ds; });
+    if (has) {
+      streak++;
+    } else if (i > 0) {
+      break; // streak broken (allow today to be missing if i===0)
+    }
+    d.setDate(d.getDate() - 1);
+  }
+
+  document.getElementById('sProj').textContent = projCount;
+  document.getElementById('sTotal').textContent = totalReports;
+  document.getElementById('sMonth').textContent = monthCount;
+  document.getElementById('sStreak').textContent = streak;
+
+  renderMyChart();
+  renderProjCards('myProjCards');
+
+  /* Show empty state if no projects */
+  var entries = Object.entries(myAssignments);
+  document.getElementById('homeProjEmpty').style.display = entries.length ? 'none' : 'block';
+}
+
+/* ============================================================
+   CHART — Last 7 Days Report Count
+   ============================================================ */
+function renderMyChart() {
+  var dk = document.documentElement.getAttribute('data-theme') === 'dark';
+  var gc = dk ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+  var tc = dk ? '#94A3B8' : '#64748B';
+  var labels = [], data = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    labels.push(d.toLocaleDateString('en', { weekday: 'short' }));
+    var c = 0;
+    Object.values(myReports).forEach(function(r) { if (r.createdDate === ds) c++; });
+    data.push(c);
+  }
+  if (myChart) myChart.destroy();
+  myChart = new Chart(document.getElementById('myChart'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Reports',
+        data: data,
+        backgroundColor: 'rgba(13,148,136,.7)',
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tc }, grid: { display: false } },
+        y: { ticks: { color: tc, stepSize: 1 }, grid: { color: gc }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   PROJECT CARDS — Render assigned projects
+   ============================================================ */
+function renderProjCards(containerId) {
+  var container = document.getElementById(containerId);
+  var entries = Object.entries(myAssignments);
+
+  if (!entries.length) {
+    container.innerHTML = '';
+    if (containerId === 'workProjCards') {
+      document.getElementById('workProjEmpty').style.display = 'block';
+    }
+    return;
+  }
+
+  if (containerId === 'workProjCards') {
+    document.getElementById('workProjEmpty').style.display = 'none';
+  }
+
+  container.innerHTML = entries.map(function(entry) {
+    var aid = entry[0], a = entry[1];
+    var p = allP[a.projectId] || {};
+    var statusCls = p.status === 'Active' ? 'badge-active' : p.status === 'Completed' ? 'badge-completed' : 'badge-hold';
+    var isWorkPage = containerId === 'workProjCards';
+    var projName = (p.name || a.projectName || 'Project').replace(/'/g, "\\'");
+    var projClient = (p.clientName || 'No client').replace(/'/g, "\\'");
+    var btns;
+    if (isWorkPage) {
+      btns = '<button class="btn-sm-custom btn-sm-primary" onclick="openWorkEntry(\'' + a.projectId + '\',\'' + projName + '\',\'' + projClient + '\')"><i class="fas fa-plus"></i> Add Today\'s Work</button>';
+    } else {
+      btns = '<button class="btn-sm-custom btn-sm-primary" onclick="goToWorkFor(\'' + a.projectId + '\',\'' + projName + '\',\'' + projClient + '\')"><i class="fas fa-plus"></i> Add Work</button>'
+           + '<button class="btn-sm-custom btn-sm-outline" onclick="navTo(document.querySelector(\'[data-page=page-history]\'),\'page-history\')"><i class="fas fa-clock-rotate-left"></i> History</button>';
+    }
+    return '<div class="proj-card">'
+      + '<h5>' + (p.name || a.projectName || 'Project') + '</h5>'
+      + '<div class="code">' + (p.code || '') + ' <span class="badge-status ' + statusCls + '" style="margin-left:.5rem">' + (p.status || 'Active') + '</span></div>'
+      + '<div class="client"><i class="fas fa-user-tie" style="margin-right:.3rem"></i>' + (p.clientName || 'No client') + '</div>'
+      + '<div class="actions">' + btns + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+/** Navigate to work page and open specific project */
+function goToWorkFor(projId, name, client) {
+  navTo(document.querySelector('[data-page=page-work]'), 'page-work');
+  setTimeout(function() {
+    openWorkEntry(projId, name, client);
+  }, 150);
+}
+
+/* ============================================================
+   MY WORK PAGE
+   ============================================================ */
+function loadWorkPage() {
+  renderProjCards('workProjCards');
+  /* Reset to project list view */
+  document.getElementById('workProjList').style.display = 'block';
+  document.getElementById('workEntryForm').style.display = 'none';
+  selectedProjId = null;
+}
+
+/** Open the work entry form for a specific project */
+function openWorkEntry(projId, name, client) {
+  selectedProjId = projId;
+  document.getElementById('workProjList').style.display = 'none';
+  document.getElementById('workEntryForm').style.display = 'block';
+  document.getElementById('weProjName').textContent = name || 'Project';
+  document.getElementById('weProjClient').innerHTML = '<i class="fas fa-user-tie" style="margin-right:.3rem"></i>Client: ' + (client || 'N/A');
+  document.getElementById('workText').value = '';
+  document.getElementById('workText').focus();
+}
+
+/** Go back to project list */
+function backToWorkList() {
+  document.getElementById('workProjList').style.display = 'block';
+  document.getElementById('workEntryForm').style.display = 'none';
+  selectedProjId = null;
+}
+
+/* ============================================================
+   SUBMIT WORK REPORT
+   ============================================================ */
+async function submitWork() {
+  var text = document.getElementById('workText').value.trim();
+  if (!text) { toast('Please enter your work details', 'error'); return; }
+
+  var now = new Date();
+  var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  var timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  var p = allP[selectedProjId] || {};
+
+  var data = {
+    employeeId: CU.uid,
+    employeeName: myData.fullName || '',
+    employeeCode: myData.employeeId || '',
+    projectId: selectedProjId,
+    projectName: p.name || '',
+    projectCode: p.code || '',
+    workDetails: text,
+    createdDate: dateStr,
+    createdTime: timeStr,
+    month: String(now.getMonth() + 1).padStart(2, '0'),
+    year: String(now.getFullYear()),
+    timestamp: now.getTime()
+  };
+
+  showL();
+  try {
+    await db.ref('reports/' + genId()).set(data);
+    hideL();
+    toast('Work submitted successfully!', 'success');
+    document.getElementById('workText').value = '';
+    backToWorkList();
+  } catch (e) {
+    hideL();
+    toast(e.message, 'error');
+  }
+}
+
+/* ============================================================
+   WORK HISTORY PAGE
+   ============================================================ */
+
+/** Populate filter dropdowns and load history */
+function loadHistoryPage() {
+  /* Populate year filter */
+  var ys = document.getElementById('hYear');
+  ys.innerHTML = '<option value="">All</option>';
+  var yrs = {};
+  Object.values(myReports).forEach(function(r) { if (r.year) yrs[r.year] = true; });
+  yrs[curY()] = true;
+  Object.keys(yrs).sort().reverse().forEach(function(y) {
+    ys.innerHTML += '<option value="' + y + '">' + y + '</option>';
+  });
+
+  /* Populate project filter */
+  var ps = document.getElementById('hProj');
+  ps.innerHTML = '<option value="">All Projects</option>';
+  Object.values(myAssignments).forEach(function(a) {
+    var p = allP[a.projectId] || {};
+    var name = (p.name || a.projectName || 'Unknown').replace(/"/g, '&quot;');
+    ps.innerHTML += '<option value="' + a.projectId + '">' + name + '</option>';
+  });
+
+  /* Set defaults to current month/year */
+  document.getElementById('hMonth').value = curM();
+  document.getElementById('hYear').value = curY();
+
+  loadHistory();
+}
+
+/** Render history based on current filters */
+function loadHistory() {
+  var fm = document.getElementById('hMonth').value;
+  var fy = document.getElementById('hYear').value;
+  var fp = document.getElementById('hProj').value;
+
+  /* Filter reports */
+  var filtered = Object.values(myReports).filter(function(r) {
+    if (fm && r.month !== fm) return false;
+    if (fy && r.year !== fy) return false;
+    if (fp && r.projectId !== fp) return false;
+    return true;
+  }).sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+
+  var container = document.getElementById('historyContainer');
+  var empty = document.getElementById('historyEmpty');
+
+  if (!filtered.length) {
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  /* Group by month-year */
+  var groups = {};
+  filtered.forEach(function(r) {
+    var key = r.year + '-' + r.month;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+
+  /* Build HTML */
+  var html = '';
+  Object.keys(groups).sort().reverse().forEach(function(key) {
+    var parts = key.split('-');
+    var yr = parts[0], mn = parts[1];
+    var mName = monthNames[parseInt(mn) - 1] || mn;
+    var reports = groups[key].sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+
+    /* Group by date within this month */
+    var byDate = {};
+    reports.forEach(function(r) {
+      if (!byDate[r.createdDate]) byDate[r.createdDate] = [];
+      byDate[r.createdDate].push(r);
+    });
+
+    var dateKeys = Object.keys(byDate).sort().reverse();
+
+    html += '<div class="hist-month">';
+    html += '<div class="hist-month-hdr" onclick="this.classList.toggle(\'open\');this.nextElementSibling.classList.toggle(\'open\')">';
+    html += mName + ' ' + yr + ' <span style="font-size:.85rem;font-weight:400;color:var(--text-sec)">' + reports.length + ' report(s)</span>';
+    html += ' <i class="fas fa-chevron-down"></i></div>';
+    html += '<div class="hist-dates">';
+
+    dateKeys.forEach(function(dateKey) {
+      var dateReports = byDate[dateKey];
+      var dateObj = new Date(dateKey + 'T00:00:00');
+      var dateLabel = dateObj.toLocaleDateString('en', { weekday: 'short' }) + ', ' + fmtDate(dateKey);
+
+      html += '<div class="hist-date" onclick="this.nextElementSibling.classList.toggle(\'open\')">';
+      html += '<span class="dt">' + dateLabel + '</span>';
+      html += '<span class="tm">' + dateReports.length + ' report(s) <i class="fas fa-chevron-down" style="font-size:.7rem;margin-left:.3rem"></i></span>';
+      html += '</div>';
+
+      html += '<div class="hist-date-detail">';
+
+      dateReports.forEach(function(r) {
+        html += '<div class="work-detail">';
+        html += '<div class="meta">';
+        html += '<span><i class="fas fa-clock"></i> ' + (r.createdTime || '') + '</span>';
+        html += '<span><i class="fas fa-folder"></i> ' + (r.projectName || '') + '</span>';
+        if (r.projectCode) html += '<span><i class="fas fa-code"></i> ' + r.projectCode + '</span>';
+        html += '</div>';
+        html += '<div class="work-text">' + escapeHtml(r.workDetails || '') + '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>'; /* end hist-date-detail */
+    });
+
+    html += '</div>'; /* end hist-dates */
+    html += '</div>'; /* end hist-month */
+  });
+
+  container.innerHTML = html;
+}
+
+/** Escape HTML to prevent XSS in work details */
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/* ============================================================
+   PROFILE PAGE
+   ============================================================ */
+function loadProfile() {
+  var fields = document.getElementById('profFields');
+  var items = [
+    { label: 'Full Name', value: myData.fullName || '-' },
+    { label: 'Employee ID', value: myData.employeeId || '-' },
+    { label: 'Email', value: myData.email || '-' },
+    { label: 'Mobile', value: myData.mobile || '-' },
+    { label: 'Department', value: myData.department || '-' },
+    { label: 'Designation', value: myData.designation || '-' }
+  ];
+  fields.innerHTML = items.map(function(item) {
+    return '<div class="pf-item"><label>' + item.label + '</label><span>' + escapeHtml(item.value) + '</span></div>';
+  }).join('');
+}
+
+/* ============================================================
+   CHANGE PASSWORD
+   ============================================================ */
+async function changePass() {
+  var np = document.getElementById('newPass').value;
+  var cp = document.getElementById('confPass').value;
+  if (!np || !cp) { toast('Please fill in all fields', 'error'); return; }
+  if (np !== cp) { toast('Passwords do not match', 'error'); return; }
+  if (np.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
+  showL();
+  try {
+    await CU.updatePassword(np);
+    hideL();
+    toast('Password updated successfully', 'success');
+    document.getElementById('newPass').value = '';
+    document.getElementById('confPass').value = '';
+  } catch (e) {
+    hideL();
+    toast(e.message, 'error');
+  }
+}
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+async function handleLogout() {
+  try { await auth.signOut(); } catch (e) {}
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>
