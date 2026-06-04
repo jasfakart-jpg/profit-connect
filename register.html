@@ -11,115 +11,97 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
-:root{--primary:#0D9488;--primary-dark:#0F766E;--primary-light:#14B8A6;--secondary:#059669;--accent:#F59E0B;--accent-dark:#D97706;--danger:#EF4444;--bg:#F1F5F9;--bg-card:#FFFFFF;--text:#0F172A;--text-sec:#64748B;--border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.08)}
+:root{--primary:#0D9488;--primary-dark:#0F766E;--secondary:#059669;--accent:#F59E0B;--danger:#EF4444;--bg:#F1F5F9;--bg-card:#fff;--text:#0F172A;--text-sec:#64748B;--border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.08)}
 [data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
-h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}
+h1,h2,h3{font-family:'Outfit',sans-serif;font-weight:700}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
-.hero-section{min-height:100vh;position:relative;overflow:hidden;background:linear-gradient(135deg,#064E3B 0%,#0D9488 40%,#059669 70%,#064E3B 100%);display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
-.hero-shape{position:absolute;border-radius:50%;opacity:.08;background:#fff;animation:float 8s ease-in-out infinite}
+.hero{min-height:100vh;position:relative;overflow:hidden;background:linear-gradient(135deg,#064E3B 0%,#0D9488 40%,#059669 70%,#064E3B 100%);display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.hero-shape{position:absolute;border-radius:50%;opacity:.07;background:#fff;animation:fl 8s ease-in-out infinite}
 .hero-shape:nth-child(1){width:350px;height:350px;top:-80px;left:-80px}
 .hero-shape:nth-child(2){width:200px;height:200px;bottom:-40px;right:-40px;animation-delay:2s}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-25px)}}
-.reg-container{position:relative;z-index:2;background:var(--bg-card);border-radius:20px;padding:2.5rem;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
-.reg-container h2{text-align:center;font-size:1.5rem;margin-bottom:.2rem}
-.reg-container .sub{text-align:center;color:var(--text-sec);font-size:.88rem;margin-bottom:1.5rem}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-25px)}}
+.rcard{position:relative;z-index:2;background:var(--bg-card);border-radius:20px;padding:2.5rem;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
+.rcard h2{text-align:center;font-size:1.5rem;margin-bottom:.2rem}
+.rcard .sub{text-align:center;color:var(--text-sec);font-size:.88rem;margin-bottom:1.5rem}
 .form-control,.form-select{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.65rem 1rem;font-size:.9rem;transition:border .2s}
 .form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
 .form-label{font-size:.84rem;font-weight:600}
-.btn-reg{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:.7rem;font-weight:600;width:100%;transition:all .2s;font-size:.95rem}
+.btn-reg{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:.7rem;font-weight:600;width:100%;transition:all .2s;font-size:.95rem;cursor:pointer}
 .btn-reg:hover{background:var(--primary-dark);transform:translateY(-1px)}
-.links{text-align:center;margin-top:1rem}
-.links a{color:var(--primary);font-weight:600;font-size:.85rem}
+.links{text-align:center;margin-top:1rem}.links a{color:var(--primary);font-weight:600;font-size:.85rem}
 .toast-box{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
-.toast-msg{padding:.85rem 1.25rem;border-radius:12px;color:#fff;font-size:.88rem;font-weight:500;display:flex;align-items:center;gap:.6rem;animation:slideIn .3s ease;min-width:280px;box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.toast-msg{padding:.85rem 1.25rem;border-radius:12px;color:#fff;font-size:.88rem;font-weight:500;display:flex;align-items:center;gap:.6rem;animation:si .3s ease;min-width:280px;box-shadow:0 8px 25px rgba(0,0,0,.15)}
 .toast-msg.success{background:linear-gradient(135deg,#059669,#10B981)}
 .toast-msg.error{background:linear-gradient(135deg,#DC2626,#EF4444)}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 .loading-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(2px)}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
 <div class="toast-box" id="toastBox"></div>
 <div class="loading-ov" id="loadingOv"><div class="spinner"></div></div>
-
-<section class="hero-section">
+<section class="hero">
   <div class="hero-shape"></div><div class="hero-shape"></div>
-  <div class="reg-container">
+  <div class="rcard">
     <div class="text-center mb-2">
       <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;margin-bottom:.5rem"><i class="fas fa-user-plus"></i></div>
       <h2>Employee Registration</h2>
       <p class="sub">Create your account to get started</p>
     </div>
-    <form id="regForm" onsubmit="event.preventDefault(); return false;">
-      <div class="row g-3">
-        <div class="col-12"><label class="form-label">Full Name *</label><input type="text" class="form-control" id="rName" placeholder="Enter your full name" required></div>
-        <div class="col-md-6"><label class="form-label">Employee ID *</label><input type="text" class="form-control" id="rEmpId" placeholder="e.g. EMP-001" required></div>
-        <div class="col-md-6"><label class="form-label">Mobile Number *</label><input type="tel" class="form-control" id="rMobile" placeholder="+91 XXXXX XXXXX" required></div>
-        <div class="col-12"><label class="form-label">Email Address *</label><input type="email" class="form-control" id="rEmail" placeholder="you@company.com" required></div>
-        <div class="col-md-6"><label class="form-label">Department *</label><select class="form-select" id="rDept" required><option value="">Select Department</option><option>Development</option><option>Design</option><option>Testing</option><option>Marketing</option><option>HR</option><option>Finance</option><option>Operations</option><option>Other</option></select></div>
-        <div class="col-md-6"><label class="form-label">Designation *</label><input type="text" class="form-control" id="rDesig" placeholder="e.g. Software Engineer" required></div>
-        <div class="col-md-6"><label class="form-label">Password *</label><input type="password" class="form-control" id="rPass" placeholder="Min 6 characters" required></div>
-        <div class="col-md-6"><label class="form-label">Confirm Password *</label><input type="password" class="form-control" id="rPassC" placeholder="Re-enter password" required></div>
-      </div>
-      <button type="submit" class="btn-reg mt-3" onclick="handleRegister(event)"><i class="fas fa-user-check"></i> Create Account</button>
-    </form>
-    <div class="links"><a href="login.html"><i class="fas fa-arrow-left"></i> Back to Login</a></div>
+    <div class="mb-3"><label class="form-label">Full Name *</label><input type="text" class="form-control" id="rName" placeholder="Enter your full name"></div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><label class="form-label">Employee ID *</label><input type="text" class="form-control" id="rEmpId" placeholder="EMP-001"></div>
+      <div class="col-md-6"><label class="form-label">Mobile *</label><input type="tel" class="form-control" id="rMobile" placeholder="+91 XXXXX XXXXX"></div>
+    </div>
+    <div class="mb-3"><label class="form-label">Email *</label><input type="email" class="form-control" id="rEmail" placeholder="you@company.com"></div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><label class="form-label">Department *</label><select class="form-select" id="rDept"><option value="">Select</option><option>Development</option><option>Design</option><option>Testing</option><option>Marketing</option><option>HR</option><option>Finance</option><option>Operations</option><option>Other</option></select></div>
+      <div class="col-md-6"><label class="form-label">Designation *</label><input type="text" class="form-control" id="rDesig" placeholder="Software Engineer"></div>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><label class="form-label">Password *</label><input type="password" class="form-control" id="rPass" placeholder="Min 6 characters"></div>
+      <div class="col-md-6"><label class="form-label">Confirm *</label><input type="password" class="form-control" id="rPassC" placeholder="Re-enter password"></div>
+    </div>
+    <button class="btn-reg" onclick="handleRegister()"><i class="fas fa-user-check"></i> Create Account</button>
+    <div class="links"><a href="index.html"><i class="fas fa-arrow-left"></i> Back to Login</a></div>
   </div>
 </section>
-
 <script>
-const firebaseConfig={apiKey:"AIzaSyDgLbow32QrQVq0lj8q7htfQrX80W8x-OU",authDomain:"workreports-5ed68.firebaseapp.com",projectId:"workreports-5ed68",storageBucket:"workreports-5ed68.firebasestorage.app",messagingSenderId:"696550085897",appId:"1:696550085897:web:5dd34faeb34a100318afd8",measurementId:"G-J3ML7PBLDS"};
+var firebaseConfig={apiKey:"AIzaSyDgLbow32QrQVq0lj8q7htfQrX80W8x-OU",authDomain:"workreports-5ed68.firebaseapp.com",projectId:"workreports-5ed68",storageBucket:"workreports-5ed68.firebasestorage.app",messagingSenderId:"696550085897",appId:"1:696550085897:web:5dd34faeb34a100318afd8",measurementId:"G-J3ML7PBLDS"};
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.database();
+var auth=firebase.auth(),db=firebase.database();
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-function showToast(msg,type='info'){const c=document.getElementById('toastBox');const icons={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};const t=document.createElement('div');t.className=`toast-msg ${type}`;t.innerHTML=`<i class="fas ${icons[type]||icons.info}"></i> ${msg}`;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},3500)}
-function showLoading(){document.getElementById('loadingOv').style.display='flex'}
-function hideLoading(){document.getElementById('loadingOv').style.display='none'}
+function toast(m,t){t=t||'info';var c=document.getElementById('toastBox');var ic={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};var d=document.createElement('div');d.className='toast-msg '+t;d.innerHTML='<i class="fas '+(ic[t]||ic.info)+'"></i> '+m;c.appendChild(d);setTimeout(function(){d.style.opacity='0';d.style.transform='translateX(100%)';d.style.transition='all .3s';setTimeout(function(){d.remove()},300)},3500)}
+function showL(){document.getElementById('loadingOv').style.display='flex'}
+function hideL(){document.getElementById('loadingOv').style.display='none'}
 
-async function handleRegister(e){
-  if(e) e.preventDefault();
-  const name=document.getElementById('rName').value.trim();
-  const empId=document.getElementById('rEmpId').value.trim();
-  const mobile=document.getElementById('rMobile').value.trim();
-  const email=document.getElementById('rEmail').value.trim();
-  const dept=document.getElementById('rDept').value;
-  const desig=document.getElementById('rDesig').value.trim();
-  const pass=document.getElementById('rPass').value;
-  const passC=document.getElementById('rPassC').value;
-
-  if(!name||!empId||!mobile||!email||!dept||!desig||!pass||!passC){showToast('Please fill in all fields','error');return}
-  if(pass.length<6){showToast('Password must be at least 6 characters','error');return}
-  if(pass!==passC){showToast('Passwords do not match','error');return}
-
-  showLoading();
+async function handleRegister(){
+  var name=document.getElementById('rName').value.trim();
+  var empId=document.getElementById('rEmpId').value.trim();
+  var mobile=document.getElementById('rMobile').value.trim();
+  var email=document.getElementById('rEmail').value.trim();
+  var dept=document.getElementById('rDept').value;
+  var desig=document.getElementById('rDesig').value.trim();
+  var pass=document.getElementById('rPass').value;
+  var passC=document.getElementById('rPassC').value;
+  if(!name||!empId||!mobile||!email||!dept||!desig||!pass||!passC){toast('Please fill in all fields','error');return}
+  if(pass.length<6){toast('Password must be at least 6 characters','error');return}
+  if(pass!==passC){toast('Passwords do not match','error');return}
+  showL();
   try{
-    const cred=await auth.createUserWithEmailAndPassword(email,pass);
-    const uid=cred.user.uid;
-    await db.ref('employees/'+uid).set({
-      fullName:name,
-      employeeId:empId,
-      mobile:mobile,
-      email:email,
-      department:dept,
-      designation:desig,
-      createdAt:Date.now()
-    });
+    var cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await db.ref('employees/'+cred.user.uid).set({fullName:name,employeeId:empId,mobile:mobile,email:email,department:dept,designation:desig,createdAt:Date.now()});
     await auth.signOut();
-    hideLoading();
-    showToast('Account created successfully! Please login.','success');
-    setTimeout(()=>{window.location.href='login.html'},1000);
-  }catch(err){
-    hideLoading();
-    showToast(err.message,'error');
-  }
+    hideL();toast('Account created! Please login.','success');
+    setTimeout(function(){window.location.href='index.html'},1000);
+  }catch(err){hideL();toast(err.message,'error')}
 }
-
-const saved=localStorage.getItem('ptdc-theme');if(saved)document.documentElement.setAttribute('data-theme',saved);
+var sv=localStorage.getItem('ptdc-theme');if(sv)document.documentElement.setAttribute('data-theme',sv);
 </script>
 </body>
 </html>
