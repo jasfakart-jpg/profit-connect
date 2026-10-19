@@ -226,7 +226,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <div class="nav-item" data-p="pg-proj" onclick="nav(this,'pg-proj')"><i class="fas fa-folder-open"></i> Projects</div>
       <div class="nav-item" data-p="pg-emp" onclick="nav(this,'pg-emp')"><i class="fas fa-users"></i> Employees</div>
       <div class="nav-item" data-p="pg-assign" onclick="nav(this,'pg-assign')"><i class="fas fa-user-check"></i> Assignments</div>
-      <div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Command Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
+      <div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
       <div class="nav-item" data-p="pg-rep" onclick="nav(this,'pg-rep')"><i class="fas fa-clipboard-list"></i> Reports</div>
       <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
       <div class="nav-item" data-p="pg-prof" onclick="nav(this,'pg-prof')"><i class="fas fa-user-circle"></i> Profile</div>
@@ -259,11 +259,11 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
         <div class="cmd-launch">
           <div class="cmd-launch-icon"><i class="fas fa-bullhorn"></i></div>
           <div class="cmd-launch-text">
-            <h5>Command new works</h5>
+            <h5>Common works</h5>
             <p>Create unlimited tickets without assigning a project. Open tickets show for every employee until you assign one, or someone takes it.</p>
           </div>
           <div class="cmd-launch-count"><strong id="xCmd">0</strong><span>open for all</span></div>
-          <button type="button" class="cmd-launch-btn" onclick="nav(document.querySelector('[data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-plus"></i> Command New Work</button>
+          <button type="button" class="cmd-launch-btn" onclick="nav(document.querySelector('[data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-plus"></i> New Common Work</button>
         </div>
         <div class="stat-cards">
           <div class="s-card"><div class="ib gt"><i class="fas fa-users"></i></div><div class="info"><h3 id="xEmp">0</h3><p>Total Employees</p></div></div>
@@ -337,7 +337,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <div id="pg-cmd" class="page">
         <div class="cmd-toolbar">
           <p class="cmd-hint">Drag a ticket by the grip onto an employee, or tap Assign. Swipe sideways on a phone to move between people. If a ticket is not assigned, every employee can see it and add it to their progress list.</p>
-          <button type="button" class="bsc bsc-p cmd-new-btn" onclick="openCmdM()"><i class="fas fa-plus"></i> Command New Work</button>
+          <button type="button" class="bsc bsc-p cmd-new-btn" onclick="openCmdM()"><i class="fas fa-plus"></i> New Common Work</button>
         </div>
         <div class="cmd-tools">
           <input type="search" class="form-control" id="cmdSearch" placeholder="Search tickets..." oninput="renCmd()" autocomplete="off">
@@ -393,7 +393,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 
 <!-- Command work modal -->
 <div class="modal fade" id="cmdModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title" id="cmdMT">Command New Work</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-header"><h5 class="modal-title" id="cmdMT">New Common Work</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><input type="hidden" id="cEditId">
     <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Title *</label><input type="text" class="form-control" id="cTitle" placeholder="What needs to be done?" autocomplete="off"></div>
     <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Work details *</label><textarea class="form-control" id="cDetails" rows="5" placeholder="Describe the ticket. Anyone can pick this up if you leave it unassigned."></textarea></div>
@@ -451,7 +451,7 @@ var sv=localStorage.getItem('ptdc-theme');if(sv)document.documentElement.setAttr
 function nav(el,pid){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});if(el)el.classList.add('active');
   document.querySelectorAll('.content-area .page').forEach(function(p){p.classList.remove('active')});document.getElementById(pid).classList.add('active');
-  var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-assign':'Assignments','pg-cmd':'Command Works','pg-rep':'Reports','pg-prof':'Profile'};
+  var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-assign':'Assignments','pg-cmd':'Common Works','pg-rep':'Reports','pg-prof':'Profile'};
   document.getElementById('pgTitle').textContent=t[pid]||'Dashboard';
   curPage=pid;
   if(window.innerWidth<=992){document.getElementById('sidebar').classList.remove('open');document.getElementById('sideOv').classList.remove('show')}
@@ -573,6 +573,7 @@ function renFeed(){
       +'<div class="fh"><div class="emp"><div class="av">'+ini(r.employeeName)+'</div><div><div class="en">'+escH(r.employeeName||'')+'</div><div class="ed">'+escH(r.employeeCode||'')+'</div></div></div>'
       +'<span class="bs '+(isPend?'bs-pending':'bs-done')+'">'+(isPend?'Pending':'Completed')+'</span></div>'
       +'<div class="fm"><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+'</span>'
+      +(r.source==='common'||r.projectCode==='COMMON'?'<span class="bs bs-active">Common</span>':'')
       +(r.projectCode?'<span><i class="fas fa-code"></i> '+r.projectCode+'</span>':'')
       +'<span><i class="fas fa-calendar"></i> '+fD(r.createdDate)+'</span>'
       +'<span><i class="fas fa-clock"></i> '+(r.createdTime||'')+'</span>'
@@ -656,7 +657,7 @@ function getFilt(){
 }
 function renRep(){
   var l=getFilt(),t=l.length;l=pg(l,rPg,PS);var tb=document.getElementById('repTB'),em=document.getElementById('repE');
-  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(r){var sc=r.status==='completed'?'bs-done':'bs-pending';return '<tr><td style="white-space:nowrap">'+fD(r.createdDate)+'</td><td style="white-space:nowrap">'+(r.createdTime||'')+'</td><td><strong>'+escH(r.employeeName||'')+'</strong></td><td><code>'+escH(r.employeeCode||'')+'</code></td><td>'+escH(r.projectName||'')+'</td><td class="t2 wc" style="max-width:200px">'+escH((r.workDetails||'').replace(/\n/g,' '))+'</td><td><span class="bs '+sc+'">'+(r.status||'pending')+'</span></td><td style="white-space:nowrap;font-size:.82rem">'+fD(r.createdDate)+'<br>'+(r.createdTime||'')+'</td><td style="white-space:nowrap;font-size:.82rem;color:var(--success)">'+(r.completedDate?fD(r.completedDate)+'<br>'+(r.completedTime||''):'-')+'</td></tr>'}).join('')}
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(r){var sc=r.status==='completed'?'bs-done':'bs-pending';return '<tr><td style="white-space:nowrap">'+fD(r.createdDate)+'</td><td style="white-space:nowrap">'+(r.createdTime||'')+'</td><td><strong>'+escH(r.employeeName||'')+'</strong></td><td><code>'+escH(r.employeeCode||'')+'</code></td><td>'+escH(r.projectName||'')+(r.source==='common'||r.projectCode==='COMMON'?' <span class="bs bs-active">Common</span>':'')+'</td><td class="t2 wc" style="max-width:200px">'+escH((r.workDetails||'').replace(/\n/g,' '))+'</td><td><span class="bs '+sc+'">'+(r.status||'pending')+'</span></td><td style="white-space:nowrap;font-size:.82rem">'+fD(r.createdDate)+'<br>'+(r.createdTime||'')+'</td><td style="white-space:nowrap;font-size:.82rem;color:var(--success)">'+(r.completedDate?fD(r.completedDate)+'<br>'+(r.completedTime||''):'-')+'</td></tr>'}).join('')}
   pgH('repPag',t,rPg,'goRP');
 }
 function goRP(p){rPg=Math.max(1,p);renRep()}
@@ -885,7 +886,7 @@ function openCmdM(id){
   document.getElementById('cTitle').value='';
   document.getElementById('cDetails').value='';
   document.getElementById('cPriority').value='Normal';
-  document.getElementById('cmdMT').textContent='Command New Work';
+  document.getElementById('cmdMT').textContent='New Common Work';
   if(id&&aC[id]){
     var w=aC[id];
     document.getElementById('cEditId').value=id;

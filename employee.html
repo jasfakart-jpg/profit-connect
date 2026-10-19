@@ -154,7 +154,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <div class="sidebar-header"><h5><i class="fas fa-bolt" style="color:var(--accent)"></i> PTDC Employee</h5><small>Profit Traders Developers Connect</small></div>
 <nav class="sidebar-nav">
 <div class="nav-item active" data-p="pg-home" onclick="nav(this,'pg-home')"><i class="fas fa-th-large"></i> Dashboard</div>
-<div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Command Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
+<div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
 <div class="nav-item" data-p="pg-work" onclick="nav(this,'pg-work')"><i class="fas fa-pen-to-square"></i> My Work</div>
 <div class="nav-item" data-p="pg-hist" onclick="nav(this,'pg-hist')"><i class="fas fa-clock-rotate-left"></i> Work History</div>
 <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
@@ -217,6 +217,11 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <h5 style="font-weight:700;margin-bottom:1rem"><i class="fas fa-pen-to-square" style="color:var(--primary)"></i> Select Project to Add Work</h5>
 <div class="proj-cards" id="workProjCards"></div>
 <div id="workProjE" class="empty-s" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned.</p></div>
+<div id="myCommonWorks" style="margin-top:1.75rem">
+<h5 style="font-weight:700;margin-bottom:.35rem"><i class="fas fa-bullhorn" style="color:var(--accent)"></i> Common works</h5>
+<p style="color:var(--text-sec);font-size:.88rem;margin-bottom:.75rem">Finished common tickets are saved here for this employee, and they also appear in Work History.</p>
+<div class="emp-cmd-list" id="myCommonList"></div>
+</div>
 </div>
 <div id="workForm" style="display:none">
 <button class="btn-back" onclick="backToList()"><i class="fas fa-arrow-left"></i> Back to Projects</button>
@@ -293,7 +298,7 @@ function nav(el,pid){
   if(el)el.classList.add('active');
   document.querySelectorAll('.content-area .page').forEach(function(p){p.classList.remove('active')});
   document.getElementById(pid).classList.add('active');
-  var t={'pg-home':'Dashboard','pg-cmd':'Command Works','pg-work':'My Work','pg-hist':'Work History','pg-prof':'Profile'};
+  var t={'pg-home':'Dashboard','pg-cmd':'Common Works','pg-work':'My Work','pg-hist':'Work History','pg-prof':'Profile'};
   document.getElementById('pgTitle').textContent=t[pid]||'Dashboard';
   curPage=pid;
   if(window.innerWidth<=992){document.getElementById('sidebar').classList.remove('open');document.getElementById('sideOv').classList.remove('show')}
@@ -331,7 +336,7 @@ function loadD(){
   db.ref('reports').on('value',function(s){
     var all=s.val()||{};myR={};
     Object.keys(all).forEach(function(id){if(all[id].employeeId===CU.uid)myR[id]=all[id]});
-    if(curPage==='pg-home')renHome();if(curPage==='pg-hist')loadHist();
+    if(curPage==='pg-home')renHome();if(curPage==='pg-hist')loadHist();if(curPage==='pg-work')renMyCommon();
   });
   db.ref('commonWorks').on('value',function(s){
     aC=s.val()||{};updEmpCmdBadge();
@@ -397,7 +402,21 @@ function goWork(pid,name,client){
 }
 
 /* === WORK PAGE === */
-function renWorkPage(){renProjCards('workProjCards');document.getElementById('workList').style.display='block';document.getElementById('workForm').style.display='none';selProj=null}
+function renWorkPage(){renProjCards('workProjCards');document.getElementById('workList').style.display='block';document.getElementById('workForm').style.display='none';selProj=null;renMyCommon()}
+function renMyCommon(){
+  var host=document.getElementById('myCommonList');if(!host)return;
+  var list=[];
+  Object.keys(myR).forEach(function(id){
+    var r=myR[id];
+    if(r&&(r.source==='common'||r.projectCode==='COMMON'))list.push({id:id,r:r});
+  });
+  list.sort(function(a,b){return (b.r.timestamp||0)-(a.r.timestamp||0)});
+  if(!list.length){host.innerHTML='<div class="empty-s" style="padding:1.5rem 1rem"><i class="fas fa-bullhorn"></i><p>No finished common tickets yet. Complete one from Common Works and it will be stored here.</p></div>';return}
+  host.innerHTML=list.map(function(item){
+    var r=item.r;
+    return '<article class="emp-ticket normal"><div class="meta"><span class="bs bs-done">Completed</span><span><i class="fas fa-calendar"></i> '+fD(r.completedDate||r.createdDate)+' '+(r.completedTime||r.createdTime||'')+'</span></div><h6>'+escH(r.projectName||'Common work')+'</h6><div class="body">'+escH(r.workDetails||'')+'</div></article>';
+  }).join('');
+}
 function openWork(pid,name,client){
   selProj=pid;
   document.getElementById('workList').style.display='none';
@@ -443,7 +462,7 @@ function loadHistPage(){
   var ys=document.getElementById('hYear');ys.innerHTML='<option value="">All</option>';
   var yrs={};Object.values(myR).forEach(function(r){if(r.year)yrs[r.year]=true});yrs[cY()]=true;
   Object.keys(yrs).sort().reverse().forEach(function(y){ys.innerHTML+='<option value="'+y+'">'+y+'</option>'});
-  var ps=document.getElementById('hProj');ps.innerHTML='<option value="">All Projects</option>';
+  var ps=document.getElementById('hProj');ps.innerHTML='<option value="">All Projects</option><option value="common">Common Works</option>';
   Object.values(myA).forEach(function(a){var p=aP[a.projectId]||{};ps.innerHTML+='<option value="'+a.projectId+'">'+escH(p.name||a.projectName)+'</option>'});
   document.getElementById('hMonth').value=cM();
   document.getElementById('hYear').value=cY();
@@ -459,7 +478,8 @@ function loadHist(){
     var r=myR[id];
     if(fm&&r.month!==fm)return;
     if(fy&&r.year!==fy)return;
-    if(fp&&r.projectId!==fp)return;
+    if(fp==='common'&&r.source!=='common'&&r.projectCode!=='COMMON')return;
+    if(fp&&fp!=='common'&&r.projectId!==fp)return;
     if(fs&&r.status!==fs)return;
     filtered.push({id:id,data:r});
   });
@@ -490,7 +510,8 @@ function loadHist(){
         if(isPend){
           completeBtn='<button class="complete-btn" onclick="markComplete(\''+rid+'\')"><i class="fas fa-check"></i> Mark Completed</button>';
         }
-        html+='<div class="work-detail" style="margin-left:1.5rem"><div class="meta"><span><i class="fas fa-clock"></i> '+(r.createdTime||'')+'</span><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+'</span><span class="bs '+(isPend?'bs-pending':'bs-done')+'">'+(r.status||'pending')+'</span></div><div class="work-text">'+escH(r.workDetails||'')+'</div>';
+        var commonTag=(r.source==='common'||r.projectCode==='COMMON')?' <span class="bs bs-active">Common</span>':'';
+        html+='<div class="work-detail" style="margin-left:1.5rem"><div class="meta"><span><i class="fas fa-clock"></i> '+(r.createdTime||'')+'</span><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+'</span>'+commonTag+'<span class="bs '+(isPend?'bs-pending':'bs-done')+'">'+(r.status||'pending')+'</span></div><div class="work-text">'+escH(r.workDetails||'')+'</div>';
         if(r.status==='completed'&&r.completedDate){
           html+='<div style="margin-top:.5rem;font-size:.82rem;color:var(--success)"><i class="fas fa-check-circle"></i> Completed: '+fD(r.completedDate)+' '+(r.completedTime||'')+'</div>';
         }
@@ -625,7 +646,7 @@ function renEmpCmd(){
   var list=(empCmdTab==='mine'?groups.mine:empCmdTab==='done'?groups.done:groups.open).filter(function(item){return cmdSearchMatch(item.w)});
   var host=document.getElementById('empCmdList');
   if(!list.length){
-    var empty=empCmdTab==='mine'?'Nothing on your progress list yet. Take an open ticket, or wait for admin to assign one.':empCmdTab==='done'?'No completed command works yet.':'No open tickets. When admin creates work and leaves it unassigned, it shows here for everyone.';
+    var empty=empCmdTab==='mine'?'Nothing on your progress list yet. Take an open ticket, or wait for admin to assign one.':empCmdTab==='done'?'No completed common works yet.':'No open tickets. When admin creates work and leaves it unassigned, it shows here for everyone.';
     host.innerHTML='<div class="empty-s" style="grid-column:1/-1"><i class="fas fa-bullhorn"></i><p>'+empty+'</p></div>';
     return;
   }
@@ -692,9 +713,27 @@ function saveCmdNote(id){
   sL();
   db.ref('commonWorks/'+id).update({progressNote:text,updatedAt:Date.now()}).then(function(){hL();T('Progress saved','success')}).catch(function(e){hL();T(e.message,'error')});
 }
+function saveCommonReport(id,w,dateStr,timeStr,ts){
+  if(w.reportId)return Promise.resolve();
+  var parts=dateStr.split('-');
+  var details=(w.title||'Common work');
+  if(w.details)details+='\n'+w.details;
+  if(w.progressNote)details+='\n\nProgress: '+w.progressNote;
+  var rid=gId();
+  var data={
+    employeeId:CU.uid,employeeName:myD.fullName||w.assignedName||'',employeeCode:myD.employeeId||w.assignedCode||'',
+    projectId:'common',projectName:w.title||'Common Work',projectCode:'COMMON',
+    workDetails:details,createdDate:dateStr,createdTime:timeStr,
+    month:parts[1]||'',year:parts[0]||'',timestamp:ts,status:'completed',
+    completedDate:dateStr,completedTime:timeStr,source:'common',commonWorkId:id
+  };
+  return db.ref('reports/'+rid).set(data).then(function(){
+    return db.ref('commonWorks/'+id).update({reportId:rid});
+  });
+}
 function completeCommon(id){
   document.getElementById('cfmT').textContent='Mark as completed?';
-  document.getElementById('cfmM').textContent='This ticket will leave your progress list.';
+  document.getElementById('cfmM').textContent='This finished ticket will be saved in My Work and Work History.';
   document.getElementById('cfmB').onclick=function(){
     var now=new Date();
     var dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
@@ -712,11 +751,15 @@ function completeCommon(id){
     }).then(function(res){
       var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
       if(modal)modal.hide();
-      hL();
-      if(!res.committed){T('Could not complete this ticket','error');return}
-      empCmdTab='done';
-      if(curPage==='pg-cmd')renEmpCmd();
-      T('Marked as completed','success');
+      if(!res.committed){hL();T('Could not complete this ticket','error');return}
+      var w=res.snapshot.val()||{};
+      return saveCommonReport(id,w,dateStr,timeStr,now.getTime()).then(function(){
+        hL();
+        empCmdTab='done';
+        if(curPage==='pg-cmd')renEmpCmd();
+        if(curPage==='pg-work')renMyCommon();
+        T('Saved in My Work and Work History','success');
+      });
     }).catch(function(e){hL();T(e.message,'error')});
   };
   new bootstrap.Modal(document.getElementById('cfmModal')).show();
