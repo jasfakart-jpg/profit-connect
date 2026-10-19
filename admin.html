@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Admin - Profit Traders Developers Connect</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -192,6 +192,85 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 .profile-av{width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:800}
 @media(max-width:992px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}.hamburger{display:block}.charts-grid{grid-template-columns:1fr}}
 @media(max-width:576px){.stat-cards{grid-template-columns:1fr 1fr}.fr .form-control,.fr .form-select{min-width:100%}.content-area{padding:1rem}.tc .ch{flex-direction:column;align-items:flex-start}}
+.app-tab{display:none}
+@media(max-width:992px){
+.app-tab{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:940;background:var(--bg-card);border-top:1px solid var(--border);padding:.2rem .15rem calc(.25rem + env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -6px 24px rgba(0,0,0,.06)}
+.app-tab button{flex:1;border:0;background:transparent;color:var(--text-sec);font-size:.64rem;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;min-height:54px;padding:.2rem;cursor:pointer}
+.app-tab button i{font-size:1.05rem}
+.app-tab button.active{color:var(--primary)}
+.content-area{padding-bottom:5.6rem}
+.sidebar{width:min(86vw,320px);padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{min-height:48px;font-size:.95rem}
+.hamburger{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center}
+.topbar{padding:.45rem .65rem;padding-top:max(.45rem,env(safe-area-inset-top));gap:.35rem}
+.topbar-left{min-width:0;flex:1;gap:.35rem}
+.topbar-left h4{font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-right{gap:.25rem;flex-shrink:0}
+.profile-btn>span,.profile-btn .fa-chevron-down{display:none}
+.toast-c{left:.65rem;right:.65rem;top:max(.65rem,env(safe-area-inset-top))}
+.ct{min-width:0;width:100%}
+.form-control,.form-select,textarea.form-control{font-size:16px}
+.bsc{min-height:44px}
+.setup-card{padding:1.35rem 1rem}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.fr .fg,.fr .form-control,.fr .form-select{min-width:0;width:100%}
+.content-area .form-control,.content-area .form-select{max-width:none !important}
+.page>div[style*="space-between"],.page>div[style*="flex-end"]{flex-direction:column;align-items:stretch !important}
+.page>div[style*="space-between"] .bsc,.page>div[style*="flex-end"] .bsc{width:100%;justify-content:center}
+.tp{gap:.4rem}
+.tpill{min-height:40px;display:inline-flex;align-items:center}
+.stat-cards{gap:.7rem}
+.s-card{padding:.9rem}
+.s-card .info h3{font-size:1.15rem}
+.cmd-col{flex-basis:88vw;max-height:none}
+.cmd-col-b{max-height:68vh}
+.chart-card{padding:1rem}
+.modal-dialog{margin:.5rem}
+.modal-footer .bsc{min-height:44px}
+.table-responsive{overflow:visible}
+.tc{overflow:visible}
+.tc .table thead{display:none}
+.tc .table,.tc .table tbody,.tc .table tr,.tc .table td{display:block;width:100%}
+.tc .table tr{margin:.75rem;padding:.35rem 0;border:1px solid var(--border);border-radius:16px;background:var(--bg-card);box-shadow:var(--shadow)}
+.tc .table td{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;border:none;text-align:right;white-space:normal;padding:.42rem .85rem}
+.tc .table td::before{font-weight:700;color:var(--text-sec);font-size:.68rem;letter-spacing:.4px;text-transform:uppercase;text-align:left;flex:0 0 38%}
+#projTB td:nth-child(1)::before{content:"Name"}
+#projTB td:nth-child(2)::before{content:"Code"}
+#projTB td:nth-child(3)::before{content:"Client"}
+#projTB td:nth-child(4)::before{content:"Start"}
+#projTB td:nth-child(5)::before{content:"End"}
+#projTB td:nth-child(6)::before{content:"Status"}
+#projTB td:nth-child(7)::before{content:"Actions"}
+#empTB td:nth-child(1)::before{content:"Name"}
+#empTB td:nth-child(2)::before{content:"ID"}
+#empTB td:nth-child(3)::before{content:"Email"}
+#empTB td:nth-child(4)::before{content:"Mobile"}
+#empTB td:nth-child(5)::before{content:"Dept"}
+#empTB td:nth-child(6)::before{content:"Role"}
+#assignTB td:nth-child(1)::before{content:"Employee"}
+#assignTB td:nth-child(2)::before{content:"ID"}
+#assignTB td:nth-child(3)::before{content:"Project"}
+#assignTB td:nth-child(4)::before{content:"Date"}
+#assignTB td:nth-child(5)::before{content:"Actions"}
+#repTB td:nth-child(1)::before{content:"Date"}
+#repTB td:nth-child(2)::before{content:"Time"}
+#repTB td:nth-child(3)::before{content:"Employee"}
+#repTB td:nth-child(4)::before{content:"ID"}
+#repTB td:nth-child(5)::before{content:"Project"}
+#repTB td:nth-child(6)::before{content:"Work"}
+#repTB td:nth-child(7)::before{content:"Status"}
+#repTB td:nth-child(8)::before{content:"Created"}
+#repTB td:nth-child(9)::before{content:"Completed"}
+#repTB td:nth-child(6),#repTB td.t2{display:block;text-align:left;max-width:none !important}
+#repTB td:nth-child(6)::before{display:block;margin-bottom:.25rem}
+.t2,.wc{max-width:none !important;-webkit-line-clamp:8}
+.pag-w{padding:.75rem}
+}
+@media(max-width:420px){
+.fr{grid-template-columns:1fr}
+.stat-cards{grid-template-columns:1fr 1fr}
+.app-tab button span{font-size:.6rem}
+}
 </style>
 </head>
 <body>
@@ -340,7 +419,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
           <button type="button" class="bsc bsc-p cmd-new-btn" onclick="openCmdM()"><i class="fas fa-plus"></i> New Common Work</button>
         </div>
         <div class="cmd-tools">
-          <input type="search" class="form-control" id="cmdSearch" placeholder="Search tickets..." oninput="renCmd()" autocomplete="off">
+          <input type="search" class="form-control" id="cmdSearch" name="ptdc-ticket-search" placeholder="Search tickets..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeydown="cmdQueryTouched=true" onpaste="cmdQueryTouched=true" oninput="renCmd()">
           <select class="form-select" id="cmdJump" onchange="jumpCmdCol(this.value)"><option value="pool">Open for everyone</option></select>
           <label class="cmd-check"><input type="checkbox" id="cmdShowDone" onchange="renCmd()"> <span id="cmdDoneLabel">Show completed (0)</span></label>
         </div>
@@ -363,10 +442,17 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 
     </div>
   </div>
+  <nav class="app-tab" aria-label="Admin">
+    <button type="button" class="active" data-p="pg-dash" onclick="nav(document.querySelector('.sidebar [data-p=pg-dash]'),'pg-dash')"><i class="fas fa-th-large"></i><span>Home</span></button>
+    <button type="button" data-p="pg-cmd" onclick="nav(document.querySelector('.sidebar [data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-bullhorn"></i><span>Common</span></button>
+    <button type="button" data-p="pg-feed" onclick="nav(document.querySelector('.sidebar [data-p=pg-feed]'),'pg-feed')"><i class="fas fa-rss"></i><span>Feed</span></button>
+    <button type="button" data-p="pg-rep" onclick="nav(document.querySelector('.sidebar [data-p=pg-rep]'),'pg-rep')"><i class="fas fa-clipboard-list"></i><span>Reports</span></button>
+    <button type="button" onclick="togSide()"><i class="fas fa-ellipsis"></i><span>More</span></button>
+  </nav>
 </div>
 
 <!-- Project Modal -->
-<div class="modal fade" id="projModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+<div class="modal fade" id="projModal" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title" id="projMT">Add Project</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><input type="hidden" id="edProjId"><div class="row g-3">
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Name *</label><input type="text" class="form-control" id="pN"></div>
@@ -381,7 +467,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 </div></div></div>
 
 <!-- Assign Modal -->
-<div class="modal fade" id="assignModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+<div class="modal fade" id="assignModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title">Assign Project</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
     <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Employee *</label><select class="form-select" id="aEmp"></select></div>
@@ -425,7 +511,7 @@ var auth=firebase.auth(),db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
 var CU=null,aP={},aE={},aA={},aR={},aC={},curPage='pg-dash',feedMode='pending',repMode='today',adminName='Admin';
-var cmdDragState=null,cmdSuppressClick=false,cmdRenderPending=false,cmdAssignId=null,cmdErrShown=false,cmdUiBound=false;
+var cmdDragState=null,cmdSuppressClick=false,cmdRenderPending=false,cmdAssignId=null,cmdErrShown=false,cmdUiBound=false,cmdQueryTouched=false;
 var pPg=1,ePg=1,aPg=1,rPg=1;var PS=10;var c1=null,c2=null,c3=null;
 
 /* ===== UTILS ===== */
@@ -453,6 +539,7 @@ function nav(el,pid){
   document.querySelectorAll('.content-area .page').forEach(function(p){p.classList.remove('active')});document.getElementById(pid).classList.add('active');
   var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-assign':'Assignments','pg-cmd':'Common Works','pg-rep':'Reports','pg-prof':'Profile'};
   document.getElementById('pgTitle').textContent=t[pid]||'Dashboard';
+  document.querySelectorAll('.app-tab [data-p]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===pid)});
   curPage=pid;
   if(window.innerWidth<=992){document.getElementById('sidebar').classList.remove('open');document.getElementById('sideOv').classList.remove('show')}
   renCurPage();
@@ -830,10 +917,16 @@ function cmdCardHtml(id,w){
     +cmdDelBtn(id,w)
     +'</div></div></div></article>';
 }
+function cmdQuery(){
+  var el=document.getElementById('cmdSearch');
+  if(!el)return '';
+  if(!cmdQueryTouched && /@/.test(el.value)) el.value='';
+  return (el.value||'').trim().toLowerCase();
+}
 function renCmd(){
   if(cmdDragState){cmdRenderPending=true;return}
   var board=document.getElementById('cmdBoard');if(!board)return;
-  var q=(document.getElementById('cmdSearch').value||'').trim().toLowerCase();
+  var q=cmdQuery();
   var sl=board.scrollLeft;
   var pool=cmdActive('',q);
   var html='<section class="cmd-col" data-emp=""><div class="cmd-col-h"><div class="cmd-pool-ic"><i class="fas fa-users"></i></div><div><div class="cmd-col-h-t">Open for everyone</div><div class="cmd-col-sub">Not assigned</div></div><span class="cmd-count">'+pool.length+'</span></div><div class="cmd-col-b">';

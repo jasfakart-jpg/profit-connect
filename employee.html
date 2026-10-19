@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Employee - Profit Traders Developers Connect</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -143,6 +143,45 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
   .emp-cmd-list,.home-cmd-grid{grid-template-columns:1fr}
   .emp-tab{flex:1 1 auto}
 }
+.app-tab{display:none}
+@media(max-width:992px){
+.app-tab{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:940;background:var(--bg-card);border-top:1px solid var(--border);padding:.2rem .15rem calc(.25rem + env(safe-area-inset-bottom));justify-content:space-around;box-shadow:0 -6px 24px rgba(0,0,0,.06)}
+.app-tab button{flex:1;border:0;background:transparent;color:var(--text-sec);font-size:.64rem;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;min-height:54px;padding:.2rem;cursor:pointer}
+.app-tab button i{font-size:1.05rem}
+.app-tab button.active{color:var(--primary)}
+.content-area{padding-bottom:5.6rem}
+.sidebar{width:min(86vw,320px)}
+.nav-item{min-height:48px}
+.hamburger{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center}
+.topbar{padding:.45rem .65rem;padding-top:max(.45rem,env(safe-area-inset-top));gap:.35rem}
+.topbar-left{min-width:0;flex:1;gap:.35rem}
+.topbar-left h4{font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-right{gap:.25rem}
+.profile-btn>span,.profile-btn .fa-chevron-down{display:none}
+.toast-c{left:.65rem;right:.65rem;top:max(.65rem,env(safe-area-inset-top))}
+.ct{min-width:0;width:100%}
+.form-control,.form-select,textarea.form-control{font-size:16px}
+.welcome-card{padding:1.15rem}
+.welcome-card h2{font-size:1.2rem}
+.stat-cards{gap:.7rem}
+.s-card{padding:.9rem}
+.hist-filters{display:grid !important;grid-template-columns:1fr 1fr;gap:.6rem}
+.hist-filters .form-select{min-width:0 !important;width:100%;min-height:44px}
+.status-btns{flex-direction:column}
+.status-btn{width:100%;justify-content:center;min-height:48px}
+.work-entry{padding:1rem}
+.work-detail{margin-left:0 !important}
+.hist-dates{padding-left:0}
+.proj-card .actions .bsc,.emp-take{min-height:44px}
+.page .tc{max-width:none !important}
+.chart-card{padding:1rem}
+.pf-fields{grid-template-columns:1fr}
+.emp-cmd-list{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+.stat-cards{grid-template-columns:1fr 1fr}
+.hist-filters{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -209,7 +248,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <button type="button" class="emp-tab" data-tab="mine">My progress <span id="tabMineC">0</span></button>
 <button type="button" class="emp-tab" data-tab="done">Completed <span id="tabDoneC">0</span></button>
 </div>
-<input type="search" class="form-control" id="empCmdSearch" placeholder="Search tickets..." oninput="renEmpCmd()" autocomplete="off" style="max-width:360px;margin-bottom:1rem;min-height:44px">
+<input type="search" class="form-control" id="empCmdSearch" name="ptdc-ticket-search" placeholder="Search tickets..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeydown="empCmdQueryTouched=true" onpaste="empCmdQueryTouched=true" oninput="renEmpCmd()" style="max-width:360px;margin-bottom:1rem;min-height:44px">
 <div class="emp-cmd-list" id="empCmdList"></div>
 </div>
 <div id="pg-work" class="page">
@@ -238,7 +277,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 </div>
 <div id="pg-hist" class="page">
 <h5 style="font-weight:700;margin-bottom:1rem"><i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i> Work History</h5>
-<div style="display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-end">
+<div class="hist-filters" style="display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:flex-end">
 <div style="display:flex;flex-direction:column;gap:.25rem"><label style="font-size:.73rem;font-weight:600;color:var(--text-sec);text-transform:uppercase">Month</label><select class="form-select" id="hMonth" onchange="loadHist()" style="min-width:140px"><option value="">All</option><option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
 <div style="display:flex;flex-direction:column;gap:.25rem"><label style="font-size:.73rem;font-weight:600;color:var(--text-sec);text-transform:uppercase">Year</label><select class="form-select" id="hYear" onchange="loadHist()" style="min-width:120px"><option value="">All</option></select></div>
 <div style="display:flex;flex-direction:column;gap:.25rem"><label style="font-size:.73rem;font-weight:600;color:var(--text-sec);text-transform:uppercase">Project</label><select class="form-select" id="hProj" onchange="loadHist()" style="min-width:180px"><option value="">All Projects</option></select></div>
@@ -258,11 +297,17 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 </div>
 </div>
 </div>
-</div>
+<nav class="app-tab" aria-label="Employee">
+<button type="button" class="active" data-p="pg-home" onclick="nav(document.querySelector('.sidebar [data-p=pg-home]'),'pg-home')"><i class="fas fa-th-large"></i><span>Home</span></button>
+<button type="button" data-p="pg-cmd" onclick="nav(document.querySelector('.sidebar [data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-bullhorn"></i><span>Common</span></button>
+<button type="button" data-p="pg-work" onclick="nav(document.querySelector('.sidebar [data-p=pg-work]'),'pg-work')"><i class="fas fa-pen-to-square"></i><span>My Work</span></button>
+<button type="button" data-p="pg-hist" onclick="nav(document.querySelector('.sidebar [data-p=pg-hist]'),'pg-hist')"><i class="fas fa-clock-rotate-left"></i><span>History</span></button>
+<button type="button" data-p="pg-prof" onclick="nav(document.querySelector('.sidebar [data-p=pg-prof]'),'pg-prof')"><i class="fas fa-user"></i><span>Profile</span></button>
+</nav>
 </div>
 
 <!-- Confirm Modal -->
-<div class="modal fade" id="cfmModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px">
+<div class="modal fade" id="cfmModal" tabindex="-1"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px">
 <div class="modal-body text-center" style="padding:2rem"><i class="fas fa-check-circle" style="font-size:2.5rem;color:var(--success);margin-bottom:1rem"></i><h5 id="cfmT">Mark as Completed?</h5><p id="cfmM" style="color:var(--text-sec);font-size:.9rem">This action cannot be undone.</p></div>
 <div class="modal-footer justify-content-center"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-s" id="cfmB" style="padding:.5rem 1.5rem">Confirm</button></div>
 </div></div></div>
@@ -274,7 +319,7 @@ firebase.initializeApp(FC);
 var auth=firebase.auth(),db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-var CU=null,myD=null,aP={},myA={},myR={},aC={},selProj=null,myCh=null,curPage='pg-home',empCmdTab='open',cmdErrShown=false,empCmdBound=false;
+var CU=null,myD=null,aP={},myA={},myR={},aC={},selProj=null,myCh=null,curPage='pg-home',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false;
 var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 /* === UTILS === */
@@ -300,6 +345,7 @@ function nav(el,pid){
   document.getElementById(pid).classList.add('active');
   var t={'pg-home':'Dashboard','pg-cmd':'Common Works','pg-work':'My Work','pg-hist':'Work History','pg-prof':'Profile'};
   document.getElementById('pgTitle').textContent=t[pid]||'Dashboard';
+  document.querySelectorAll('.app-tab [data-p]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===pid)});
   curPage=pid;
   if(window.innerWidth<=992){document.getElementById('sidebar').classList.remove('open');document.getElementById('sideOv').classList.remove('show')}
   renCur();
@@ -621,10 +667,16 @@ function splitCmd(){
   });
   return {open:cmdRankSort(open),mine:cmdRankSort(mine),done:done.sort(function(a,b){return (b.w.completedAt||0)-(a.w.completedAt||0)})};
 }
+function empCmdQuery(){
+  var el=document.getElementById('empCmdSearch');
+  if(!el)return '';
+  if(!empCmdQueryTouched && /@/.test(el.value)) el.value='';
+  return (el.value||'').trim().toLowerCase();
+}
 function cmdSearchMatch(w){
-  var q=(document.getElementById('empCmdSearch')&&document.getElementById('empCmdSearch').value||'').trim().toLowerCase();
+  var q=empCmdQuery();
   if(!q)return true;
-  return ((w.title||'')+' '+(w.details||'')+' '+(w.createdByName||'')).toLowerCase().indexOf(q)!==-1;
+  return ((w.title||'')+' '+(w.details||'')+' '+(w.createdByName||'')+' '+(w.progressNote||'')).toLowerCase().indexOf(q)!==-1;
 }
 function renHomeCmd(){
   var box=document.getElementById('homeCmd');if(!box)return;
@@ -646,7 +698,8 @@ function renEmpCmd(){
   var list=(empCmdTab==='mine'?groups.mine:empCmdTab==='done'?groups.done:groups.open).filter(function(item){return cmdSearchMatch(item.w)});
   var host=document.getElementById('empCmdList');
   if(!list.length){
-    var empty=empCmdTab==='mine'?'Nothing on your progress list yet. Take an open ticket, or wait for admin to assign one.':empCmdTab==='done'?'No completed common works yet.':'No open tickets. When admin creates work and leaves it unassigned, it shows here for everyone.';
+    var q=empCmdQuery();
+    var empty=q?'No tickets match that search.':empCmdTab==='mine'?'Nothing on your progress list yet. Take an open ticket, or wait for admin to assign one.':empCmdTab==='done'?'No completed common works yet.':'No open tickets. When admin creates work and leaves it unassigned, it shows here for everyone.';
     host.innerHTML='<div class="empty-s" style="grid-column:1/-1"><i class="fas fa-bullhorn"></i><p>'+empty+'</p></div>';
     return;
   }
