@@ -252,7 +252,20 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 #empTB td:nth-child(3)::before{content:"Email"}
 #empTB td:nth-child(4)::before{content:"Mobile"}
 #empTB td:nth-child(5)::before{content:"Dept"}
-#empTB td:nth-child(6)::before{content:"Role"}
+#empTB td:nth-child(6)::before{content:"Designation"}
+#empTB td:nth-child(7)::before{content:"Actions"}
+#adminTB td:nth-child(1)::before{content:"Name"}
+#adminTB td:nth-child(2)::before{content:"Email"}
+#adminTB td:nth-child(3)::before{content:"Role"}
+#adminTB td:nth-child(4)::before{content:"Mobile"}
+#adminTB td:nth-child(5)::before{content:"Actions"}
+#histTB td:nth-child(1)::before{content:"Date"}
+#histTB td:nth-child(2)::before{content:"Employee"}
+#histTB td:nth-child(3)::before{content:"ID"}
+#histTB td:nth-child(4)::before{content:"Project"}
+#histTB td:nth-child(5)::before{content:"Work"}
+#histTB td:nth-child(6)::before{content:"Status"}
+#histTB td:nth-child(7)::before{content:"Account"}
 #assignTB td:nth-child(1)::before{content:"Employee"}
 #assignTB td:nth-child(2)::before{content:"ID"}
 #assignTB td:nth-child(3)::before{content:"Project"}
@@ -310,9 +323,11 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <div class="nav-item" data-p="pg-feed" onclick="nav(this,'pg-feed')"><i class="fas fa-rss"></i> Work Feed</div>
       <div class="nav-item" data-p="pg-proj" onclick="nav(this,'pg-proj')"><i class="fas fa-folder-open"></i> Projects</div>
       <div class="nav-item" data-p="pg-emp" onclick="nav(this,'pg-emp')"><i class="fas fa-users"></i> Employees</div>
+      <div class="nav-item" data-p="pg-admins" onclick="nav(this,'pg-admins')"><i class="fas fa-user-shield"></i> Manage Admins</div>
       <div class="nav-item" data-p="pg-assign" onclick="nav(this,'pg-assign')"><i class="fas fa-user-check"></i> Assignments</div>
       <div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
       <div class="nav-item" data-p="pg-rep" onclick="nav(this,'pg-rep')"><i class="fas fa-clipboard-list"></i> Reports</div>
+      <div class="nav-item" data-p="pg-hist" onclick="nav(this,'pg-hist')"><i class="fas fa-clock-rotate-left"></i> Work History</div>
       <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
       <div class="nav-item" data-p="pg-prof" onclick="nav(this,'pg-prof')"><i class="fas fa-user-circle"></i> Profile</div>
     </nav>
@@ -387,8 +402,21 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 
       <!-- EMPLOYEES -->
       <div id="pg-emp" class="page">
-        <div style="margin-bottom:1rem"><input type="text" class="form-control" id="sEmp" placeholder="Search employees..." style="max-width:360px" oninput="renEmp()"></div>
-        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>ID</th><th>Email</th><th>Mobile</th><th>Dept</th><th>Designation</th></tr></thead><tbody id="empTB"></tbody></table></div><div id="empE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees</p></div><div class="pag-w" id="empPag"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">
+          <input type="text" class="form-control" id="sEmp" placeholder="Search employees..." style="max-width:360px" oninput="renEmp()">
+          <button class="bsc bsc-p" style="padding:.5rem 1.2rem;min-height:44px" onclick="openEmpM()"><i class="fas fa-plus"></i> Add Employee</button>
+        </div>
+        <p style="color:var(--text-sec);font-size:.88rem;margin:-.25rem 0 1rem">Deleting an employee removes only the login. Their past work stays in Work History.</p>
+        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>ID</th><th>Email</th><th>Mobile</th><th>Dept</th><th>Designation</th><th>Actions</th></tr></thead><tbody id="empTB"></tbody></table></div><div id="empE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees</p></div><div class="pag-w" id="empPag"></div></div>
+      </div>
+
+      <div id="pg-admins" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">
+          <input type="text" class="form-control" id="sAdmin" placeholder="Search admins..." style="max-width:360px" oninput="renAdmins()">
+          <button class="bsc bsc-p" style="padding:.5rem 1.2rem;min-height:44px" onclick="openAdminM()"><i class="fas fa-plus"></i> Add Admin</button>
+        </div>
+        <p style="color:var(--text-sec);font-size:.88rem;margin:-.25rem 0 1rem">You can create as many admin logins as you need. The last remaining admin account cannot be deleted.</p>
+        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Mobile</th><th>Actions</th></tr></thead><tbody id="adminTB"></tbody></table></div><div id="adminE" class="empty-s" style="display:none"><i class="fas fa-user-shield"></i><p>No admins</p></div><div class="pag-w" id="adminPag"></div></div>
       </div>
 
       <!-- ASSIGNMENTS -->
@@ -416,6 +444,13 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:1rem"><button class="bsc bsc-a" onclick="expExcel()"><i class="fas fa-file-excel"></i> Download Excel</button></div>
         <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Time</th><th>Employee</th><th>ID</th><th>Project</th><th>Work</th><th>Status</th><th>Created</th><th>Completed</th></tr></thead><tbody id="repTB"></tbody></table></div><div id="repE" class="empty-s" style="display:none"><i class="fas fa-clipboard-list"></i><p>No reports</p></div><div class="pag-w" id="repPag"></div></div>
+      </div>
+
+      <div id="pg-hist" class="page">
+        <h5 style="font-weight:700;margin-bottom:.35rem"><i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i> Full work history</h5>
+        <p style="color:var(--text-sec);font-size:.88rem;margin-bottom:1rem">Every finished and pending work stays here. Deleting or editing an employee does not remove the work, the project, or the name of the person who did it. This list cannot be deleted.</p>
+        <div style="margin-bottom:1rem"><input type="text" class="form-control" id="sHist" placeholder="Search employee, project, or work..." style="max-width:420px" oninput="histPg=1;renHist()"></div>
+        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Employee</th><th>ID</th><th>Project</th><th>Work</th><th>Status</th><th>Account</th></tr></thead><tbody id="histTB"></tbody></table></div><div id="histE" class="empty-s" style="display:none"><i class="fas fa-clock-rotate-left"></i><p>No work history</p></div><div class="pag-w" id="histPag"></div></div>
       </div>
 
       <!-- COMMAND WORKS -->
@@ -483,6 +518,36 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
   <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem" onclick="saveAssign()">Assign</button></div>
 </div></div></div>
 
+<div class="modal fade" id="empModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="empMT">Add Employee</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="edEmpId"><div class="row g-3">
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Full name *</label><input type="text" class="form-control" id="emN" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Employee ID *</label><input type="text" class="form-control" id="emId" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Email *</label><input type="email" class="form-control" id="emEm" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="emMo" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Department</label><input type="text" class="form-control" id="emDp" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Designation</label><input type="text" class="form-control" id="emDs" autocomplete="off"></div>
+    <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Password *</label><input type="password" class="form-control" id="emPw" autocomplete="new-password"></div>
+    <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password *</label><input type="password" class="form-control" id="emPw2" autocomplete="new-password"></div>
+    <div class="col-12" id="emResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetEmpPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">A new password for another login is set from the email link. Old work records are not changed.</p></div>
+  </div></div>
+  <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem;min-height:44px" onclick="saveEmp()">Save</button></div>
+</div></div></div>
+
+<div class="modal fade" id="adminModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title" id="adminMT">Add Admin</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><input type="hidden" id="edAdminId"><div class="row g-3">
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Full name *</label><input type="text" class="form-control" id="adN" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Role</label><input type="text" class="form-control" id="adR" placeholder="Administrator" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Email *</label><input type="email" class="form-control" id="adEm" autocomplete="off"></div>
+    <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="adMo" autocomplete="off"></div>
+    <div class="col-md-6" id="adPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="adPwLbl">Password *</label><input type="password" class="form-control" id="adPw" autocomplete="new-password"></div>
+    <div class="col-md-6" id="adPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password</label><input type="password" class="form-control" id="adPw2" autocomplete="new-password"></div>
+    <div class="col-12" id="adResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetAdminPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">Another admin sets the new password from that email. Your own password can be typed above.</p></div>
+  </div></div>
+  <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem;min-height:44px" onclick="saveAdmin()">Save</button></div>
+</div></div></div>
+
 <!-- Command work modal -->
 <div class="modal fade" id="cmdModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title" id="cmdMT">New Common Work</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -526,7 +591,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
 var CU=null,aP={},aE={},aA={},aR={},aC={},aAdmins={},curPage='pg-dash',feedMode='pending',repMode='today',adminName='Admin';
 var cmdDragState=null,cmdSuppressClick=false,cmdRenderPending=false,cmdAssignId=null,cmdErrShown=false,cmdUiBound=false,cmdQueryTouched=false;
-var pPg=1,ePg=1,aPg=1,rPg=1;var PS=10;var c1=null,c2=null,c3=null;
+var pPg=1,ePg=1,aPg=1,rPg=1,adPg=1,histPg=1;var PS=10;var c1=null,c2=null,c3=null;
 
 /* ===== UTILS ===== */
 function T(m,t){t=t||'info';var c=document.getElementById('toastC');var ic={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};var d=document.createElement('div');d.className='ct '+t;d.innerHTML='<i class="fas '+(ic[t]||ic.info)+'"></i> '+m;c.appendChild(d);setTimeout(function(){d.style.opacity='0';d.style.transform='translateX(100%)';d.style.transition='all .3s';setTimeout(function(){d.remove()},300)},3500)}
@@ -551,7 +616,7 @@ var sv=localStorage.getItem('ptdc-theme');if(sv)document.documentElement.setAttr
 function nav(el,pid){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});if(el)el.classList.add('active');
   document.querySelectorAll('.content-area .page').forEach(function(p){p.classList.remove('active')});document.getElementById(pid).classList.add('active');
-  var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-assign':'Assignments','pg-cmd':'Common Works','pg-rep':'Reports','pg-prof':'Profile'};
+  var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-admins':'Manage Admins','pg-assign':'Assignments','pg-cmd':'Common Works','pg-rep':'Reports','pg-hist':'Work History','pg-prof':'Profile'};
   document.getElementById('pgTitle').textContent=t[pid]||'Dashboard';
   document.querySelectorAll('.app-tab [data-p]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===pid)});
   curPage=pid;
@@ -566,6 +631,8 @@ function renCurPage(){
   if(curPage==='pg-feed')renFeed();
   if(curPage==='pg-proj')renProj();
   if(curPage==='pg-emp')renEmp();
+  if(curPage==='pg-admins')renAdmins();
+  if(curPage==='pg-hist')renHist();
   if(curPage==='pg-assign')renAssign();
   if(curPage==='pg-cmd')renCmd();
   if(curPage==='pg-rep'){popRepF();renRep()}
@@ -614,7 +681,7 @@ function initDash(){
 
 function loadD(){
   db.ref('projects').on('value',function(s){aP=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-proj')renProj();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed()});
-  db.ref('employees').on('value',function(s){aE=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-emp')renEmp();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed();if(curPage==='pg-cmd')renCmd()});
+  db.ref('employees').on('value',function(s){aE=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-emp')renEmp();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed();if(curPage==='pg-cmd')renCmd();if(curPage==='pg-hist')renHist()});
   db.ref('assignments').on('value',function(s){aA=s.val()||{};if(curPage==='pg-assign')renAssign();if(curPage==='pg-dash')renDash();if(curPage==='pg-cmd')renCmd()});
   db.ref('admins').on('value',function(s){
     aAdmins=s.val()||{};
@@ -624,13 +691,16 @@ function loadD(){
       var tn=document.getElementById('topNm');if(tn)tn.textContent=adminName;
       var pn=document.getElementById('prNm');if(pn)pn.textContent=adminName;
     }
+    if(CU&&Object.keys(aAdmins).length&&!aAdmins[CU.uid]){auth.signOut();return}
     if(curPage==='pg-cmd')renCmd();
+    if(curPage==='pg-admins')renAdmins();
   });
   db.ref('reports').on('value',function(s){
     aR=s.val()||{};updBadge();
     if(curPage==='pg-dash')renDash();
     if(curPage==='pg-rep')renRep();
     if(curPage==='pg-feed')renFeed();
+    if(curPage==='pg-hist')renHist();
   });
   db.ref('commonWorks').on('value',function(s){
     aC=s.val()||{};updCmdNav();
@@ -720,12 +790,224 @@ function goPP(p){pPg=Math.max(1,p);renProj()}
 /* ===== EMPLOYEES ===== */
 function renEmp(){
   var s=(document.getElementById('sEmp').value||'').toLowerCase();
-  var l=Object.entries(aE).filter(function(e){var v=e[1];return!s||(v.fullName||'').toLowerCase().includes(s)||(v.employeeId||'').toLowerCase().includes(s)||(v.department||'').toLowerCase().includes(s)});
+  var l=Object.entries(aE).filter(function(e){var v=e[1];return!s||(v.fullName||'').toLowerCase().includes(s)||(v.employeeId||'').toLowerCase().includes(s)||(v.department||'').toLowerCase().includes(s)||(v.email||'').toLowerCase().includes(s)});
+  l.sort(function(a,b){return (a[1].fullName||'').localeCompare(b[1].fullName||'')});
   var t=l.length;l=pg(l,ePg,PS);var tb=document.getElementById('empTB'),em=document.getElementById('empE');
-  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var v=e[1];return '<tr><td><strong>'+escH(v.fullName||'')+'</strong></td><td><code>'+escH(v.employeeId||'')+'</code></td><td>'+escH(v.email||'')+'</td><td>'+escH(v.mobile||'')+'</td><td>'+escH(v.department||'')+'</td><td>'+escH(v.designation||'')+'</td></tr>'}).join('')}
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var id=e[0],v=e[1];return '<tr><td><strong>'+escH(v.fullName||'')+'</strong></td><td><code>'+escH(v.employeeId||'')+'</code></td><td>'+escH(v.email||'')+'</td><td>'+escH(v.mobile||'')+'</td><td>'+escH(v.department||'')+'</td><td>'+escH(v.designation||'')+'</td><td><div class="ta"><button onclick="openEmpM(\''+id+'\')"><i class="fas fa-pen"></i></button><button class="bd" onclick="delEmp(\''+id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>'}).join('')}
   pgH('empPag',t,ePg,'goEP');
 }
 function goEP(p){ePg=Math.max(1,p);renEmp()}
+function makerAuth(){
+  var app;try{app=firebase.app('ptdc-maker')}catch(e){app=firebase.initializeApp(FC,'ptdc-maker')}
+  return app.auth();
+}
+async function createLogin(email,pass){
+  var au=makerAuth();
+  var cred=await au.createUserWithEmailAndPassword(email,pass);
+  var uid=cred.user.uid;
+  await au.signOut();
+  return uid;
+}
+function openEmpM(id){
+  ['emN','emId','emEm','emMo','emDp','emDs','emPw','emPw2'].forEach(function(x){document.getElementById(x).value=''});
+  document.getElementById('edEmpId').value='';
+  document.getElementById('empMT').textContent='Add Employee';
+  document.getElementById('emEm').readOnly=false;
+  document.getElementById('emPwWrap').style.display='';
+  document.getElementById('emPw2Wrap').style.display='';
+  document.getElementById('emResetWrap').style.display='none';
+  if(id&&aE[id]){
+    var v=aE[id];
+    document.getElementById('edEmpId').value=id;
+    document.getElementById('emN').value=v.fullName||'';
+    document.getElementById('emId').value=v.employeeId||'';
+    document.getElementById('emEm').value=v.email||'';
+    document.getElementById('emEm').readOnly=true;
+    document.getElementById('emMo').value=v.mobile||'';
+    document.getElementById('emDp').value=v.department||'';
+    document.getElementById('emDs').value=v.designation||'';
+    document.getElementById('empMT').textContent='Edit Employee';
+    document.getElementById('emPwWrap').style.display='none';
+    document.getElementById('emPw2Wrap').style.display='none';
+    document.getElementById('emResetWrap').style.display='';
+  }
+  new bootstrap.Modal(document.getElementById('empModal')).show();
+}
+async function saveEmp(){
+  var name=document.getElementById('emN').value.trim();
+  var empId=document.getElementById('emId').value.trim();
+  var email=document.getElementById('emEm').value.trim();
+  var eid=document.getElementById('edEmpId').value;
+  if(!name||!empId||!email){T('Name, employee ID, and email are required','error');return}
+  if(Object.entries(aE).some(function(e){return e[0]!==eid&&(e[1].email||'').toLowerCase()===email.toLowerCase()})){T('This email is already an employee','error');return}
+  if(Object.entries(aE).some(function(e){return e[0]!==eid&&(e[1].employeeId||'').toLowerCase()===empId.toLowerCase()})){T('This employee ID is already used','error');return}
+  var data={fullName:name,employeeId:empId,email:email,mobile:document.getElementById('emMo').value.trim(),department:document.getElementById('emDp').value.trim(),designation:document.getElementById('emDs').value.trim(),updatedAt:Date.now()};
+  sL();
+  try{
+    if(eid){await db.ref('employees/'+eid).update(data);T('Employee updated. Past work is unchanged','success')}
+    else{
+      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value;
+      if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
+      if(pass!==pass2){hL();T('Passwords do not match','error');return}
+      var uid=await createLogin(email,pass);
+      data.createdAt=Date.now();
+      await db.ref('employees/'+uid).set(data);
+      T('Employee account created','success');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('empModal')).hide();hL();
+  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':e.message,'error')}
+}
+function resetEmpPass(){
+  var email=document.getElementById('emEm').value.trim();
+  if(!email){T('No email on this account','error');return}
+  sL();
+  auth.sendPasswordResetEmail(email).then(function(){hL();T('Password reset email sent','success')}).catch(function(e){hL();T(e.message,'error')});
+}
+function delEmp(uid){
+  var v=aE[uid]||{};
+  document.getElementById('cfmT').textContent='Delete employee account?';
+  document.getElementById('cfmM').textContent='Remove '+(v.fullName||'this employee')+'? Their login is deleted. Projects and every work record stay in Work History.';
+  document.getElementById('cfmB').textContent='Delete account';
+  document.getElementById('cfmB').onclick=async function(){
+    sL();
+    try{
+      var updates={};
+      updates['employees/'+uid]=null;
+      Object.keys(aA).forEach(function(id){if(aA[id]&&aA[id].employeeId===uid)updates['assignments/'+id]=null});
+      Object.keys(aC).forEach(function(id){
+        var w=aC[id];
+        if(!w||w.selfTag||w.assignedTo!==uid||w.status==='completed')return;
+        updates['commonWorks/'+id+'/assignedTo']='';
+        updates['commonWorks/'+id+'/assignedName']='';
+        updates['commonWorks/'+id+'/assignedCode']='';
+        updates['commonWorks/'+id+'/status']='open';
+        updates['commonWorks/'+id+'/takenAt']=0;
+        updates['commonWorks/'+id+'/assignedAt']=0;
+      });
+      await db.ref().update(updates);
+      bootstrap.Modal.getInstance(document.getElementById('cfmModal')).hide();hL();T('Account removed. Work history is still saved','success');
+    }catch(e){hL();T(e.message,'error')}
+  };
+  new bootstrap.Modal(document.getElementById('cfmModal')).show();
+}
+function renAdmins(){
+  var s=(document.getElementById('sAdmin').value||'').toLowerCase();
+  var l=Object.entries(aAdmins).filter(function(e){var v=e[1]||{};var name=v.fullName||v.name||'';return!s||name.toLowerCase().includes(s)||(v.email||'').toLowerCase().includes(s)||(v.role||'').toLowerCase().includes(s)});
+  l.sort(function(a,b){return ((a[1].fullName||a[1].name||'')).localeCompare(b[1].fullName||b[1].name||'')});
+  var t=l.length;l=pg(l,adPg,PS);var tb=document.getElementById('adminTB'),em=document.getElementById('adminE');
+  var last=Object.keys(aAdmins).length<=1;
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){
+    var id=e[0],v=e[1]||{};
+    var name=v.fullName||v.name||(v.email?v.email.split('@')[0]:'Admin');
+    var you=CU&&id===CU.uid?' <span class="bs bs-active">You</span>':'';
+    var del=last?'':'<button class="bd" onclick="delAdmin(\''+id+'\')"><i class="fas fa-trash"></i></button>';
+    return '<tr><td><strong>'+escH(name)+'</strong>'+you+'</td><td>'+escH(v.email||'')+'</td><td>'+escH(v.role||'Administrator')+'</td><td>'+escH(v.mobile||'')+'</td><td><div class="ta"><button onclick="openAdminM(\''+id+'\')"><i class="fas fa-pen"></i></button>'+del+'</div></td></tr>';
+  }).join('')}
+  pgH('adminPag',t,adPg,'goAdP');
+}
+function goAdP(p){adPg=Math.max(1,p);renAdmins()}
+function openAdminM(id){
+  ['adN','adR','adEm','adMo','adPw','adPw2'].forEach(function(x){document.getElementById(x).value=''});
+  document.getElementById('edAdminId').value='';
+  document.getElementById('adminMT').textContent='Add Admin';
+  document.getElementById('adEm').readOnly=false;
+  document.getElementById('adPwLbl').textContent='Password *';
+  document.getElementById('adPwWrap').style.display='';
+  document.getElementById('adPw2Wrap').style.display='';
+  document.getElementById('adResetWrap').style.display='none';
+  if(id&&aAdmins[id]){
+    var v=aAdmins[id];
+    document.getElementById('edAdminId').value=id;
+    document.getElementById('adN').value=v.fullName||v.name||'';
+    document.getElementById('adR').value=v.role||'Administrator';
+    document.getElementById('adEm').value=v.email||'';
+    document.getElementById('adEm').readOnly=true;
+    document.getElementById('adMo').value=v.mobile||'';
+    document.getElementById('adminMT').textContent='Edit Admin';
+    var mine=CU&&id===CU.uid;
+    document.getElementById('adPwLbl').textContent=mine?'New password':'Password';
+    document.getElementById('adPwWrap').style.display=mine?'':'none';
+    document.getElementById('adPw2Wrap').style.display=mine?'':'none';
+    document.getElementById('adResetWrap').style.display=mine?'none':'';
+  }
+  new bootstrap.Modal(document.getElementById('adminModal')).show();
+}
+async function saveAdmin(){
+  var name=document.getElementById('adN').value.trim();
+  var email=document.getElementById('adEm').value.trim();
+  var eid=document.getElementById('edAdminId').value;
+  if(!name||!email){T('Name and email are required','error');return}
+  if(Object.entries(aAdmins).some(function(e){return e[0]!==eid&&(e[1].email||'').toLowerCase()===email.toLowerCase()})){T('This email is already an admin','error');return}
+  var data={fullName:name,name:name,role:document.getElementById('adR').value.trim()||'Administrator',email:email,mobile:document.getElementById('adMo').value.trim(),updatedAt:Date.now()};
+  var pass=document.getElementById('adPw').value,pass2=document.getElementById('adPw2').value;
+  if(CU&&eid===CU.uid&&pass){
+    if(pass.length<6){T('Password must be at least 6 characters','error');return}
+    if(pass!==pass2){T('Passwords do not match','error');return}
+  }
+  sL();
+  try{
+    if(eid){
+      await db.ref('admins/'+eid).update(data);
+      if(CU&&eid===CU.uid&&pass)await CU.updatePassword(pass);
+      if(CU&&eid===CU.uid)adminName=name;
+      T('Admin updated','success');
+    }else{
+      if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
+      if(pass!==pass2){hL();T('Passwords do not match','error');return}
+      var uid=await createLogin(email,pass);
+      data.createdAt=Date.now();data.createdBy=CU?CU.uid:'';
+      await db.ref('admins/'+uid).set(data);
+      T('Admin account created','success');
+    }
+    bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide();hL();
+  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':e.message,'error')}
+}
+function resetAdminPass(){
+  var email=document.getElementById('adEm').value.trim();
+  if(!email){T('No email on this account','error');return}
+  sL();
+  auth.sendPasswordResetEmail(email).then(function(){hL();T('Password reset email sent','success')}).catch(function(e){hL();T(e.message,'error')});
+}
+function delAdmin(uid){
+  if(Object.keys(aAdmins).length<=1){T('The last admin account cannot be deleted','error');return}
+  var v=aAdmins[uid]||{};
+  var name=v.fullName||v.name||v.email||'this admin';
+  document.getElementById('cfmT').textContent='Delete admin account?';
+  document.getElementById('cfmM').textContent='Remove '+name+'? At least one admin must remain.';
+  document.getElementById('cfmB').textContent='Delete account';
+  document.getElementById('cfmB').onclick=async function(){
+    if(Object.keys(aAdmins).length<=1){T('The last admin account cannot be deleted','error');return}
+    sL();
+    try{
+      await db.ref('admins/'+uid).remove();
+      bootstrap.Modal.getInstance(document.getElementById('cfmModal')).hide();
+      hL();
+      if(CU&&uid===CU.uid){await auth.signOut();return}
+      T('Admin account removed','success');
+    }catch(e){hL();T(e.message,'error')}
+  };
+  new bootstrap.Modal(document.getElementById('cfmModal')).show();
+}
+function renHist(){
+  var q=(document.getElementById('sHist').value||'').trim().toLowerCase();
+  var l=Object.entries(aR).filter(function(e){
+    var r=e[1]||{};
+    if(!q)return true;
+    var hay=((r.employeeName||'')+' '+(r.employeeCode||'')+' '+(r.projectName||'')+' '+(r.projectCode||'')+' '+(r.workDetails||'')).toLowerCase();
+    return hay.indexOf(q)!==-1;
+  }).map(function(e){var r=e[1];r._id=e[0];return r}).sort(function(a,b){return (b.timestamp||0)-(a.timestamp||0)});
+  var t=l.length;l=pg(l,histPg,PS);var tb=document.getElementById('histTB'),em=document.getElementById('histE');
+  if(!t){tb.innerHTML='';em.style.display='block'}else{
+    em.style.display='none';
+    tb.innerHTML=l.map(function(r){
+      var gone=r.employeeId&&!aE[r.employeeId];
+      var sc=r.status==='completed'?'bs-done':'bs-pending';
+      return '<tr><td style="white-space:nowrap">'+fD(r.createdDate)+'<br>'+(r.createdTime||'')+'</td><td><strong>'+escH(r.employeeName||'Unknown')+'</strong></td><td><code>'+escH(r.employeeCode||'')+'</code></td><td>'+escH(r.projectName||'')+(r.projectCode?' <code>'+escH(r.projectCode)+'</code>':'')+'</td><td class="t2 wc">'+escH(r.workDetails||'')+'</td><td><span class="bs '+sc+'">'+(r.status||'pending')+'</span></td><td>'+(gone?'<span class="bs bs-hold">Account removed</span>':'<span class="bs bs-active">Active</span>')+'</td></tr>';
+    }).join('');
+  }
+  pgH('histPag',t,histPg,'goHist');
+}
+function goHist(p){histPg=Math.max(1,p);renHist()}
 
 /* ===== ASSIGNMENTS ===== */
 function openAssignM(){
