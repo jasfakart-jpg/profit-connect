@@ -161,6 +161,12 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 .cmd-pick strong{display:block;font-size:.92rem}
 .cmd-pick small{display:block;color:var(--text-sec);font-size:.78rem}
 .cmd-pick.active,.cmd-pick:hover{border-color:var(--primary);background:rgba(13,148,136,.06)}
+.cmd-type-pick{display:flex;flex-direction:column;gap:.5rem}
+.cmd-type{display:flex;align-items:flex-start;gap:.7rem;border:1px solid var(--border);border-radius:12px;padding:.8rem .9rem;cursor:pointer;background:var(--bg);margin:0}
+.cmd-type:has(input:checked){border-color:var(--primary);background:rgba(13,148,136,.08)}
+.cmd-type input{margin-top:.2rem;width:18px;height:18px;flex-shrink:0}
+.cmd-type strong{display:block;font-size:.92rem}
+.cmd-type small{display:block;color:var(--text-sec);font-size:.78rem;font-weight:500}
 .cmd-section-h{font-weight:800;margin:1.25rem 0 .75rem}
 @media(max-width:768px){
   .cmd-col{flex-basis:86vw}
@@ -415,7 +421,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <!-- COMMAND WORKS -->
       <div id="pg-cmd" class="page">
         <div class="cmd-toolbar">
-          <p class="cmd-hint">Drag a ticket by the grip onto an employee, or tap Assign. Swipe sideways on a phone to move between people. If a ticket is not assigned, every employee can see it and add it to their progress list.</p>
+          <p class="cmd-hint">Drag a ticket by the grip onto an employee, or tap Assign. A free ticket that is not assigned is visible to every employee. A project ticket is visible only to the people already assigned to that project. Choose “I will do this” to tag a ticket to yourself. Other admins can monitor that progress.</p>
           <button type="button" class="bsc bsc-p cmd-new-btn" onclick="openCmdM()"><i class="fas fa-plus"></i> New Common Work</button>
         </div>
         <div class="cmd-tools">
@@ -481,9 +487,17 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 <div class="modal fade" id="cmdModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
   <div class="modal-header"><h5 class="modal-title" id="cmdMT">New Common Work</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body"><input type="hidden" id="cEditId">
+    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">This ticket is *</label>
+      <div class="cmd-type-pick">
+        <label class="cmd-type"><input type="radio" name="cType" value="free" checked onchange="togCmdType()"><span><strong>Free ticket</strong><small>Not linked to any project</small></span></label>
+        <label class="cmd-type"><input type="radio" name="cType" value="project" onchange="togCmdType()"><span><strong>Based on a project</strong><small>Choose the project this work belongs to</small></span></label>
+      </div>
+    </div>
+    <div class="mb-3" id="cProjWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Project *</label><select class="form-select" id="cProject" style="min-height:48px"></select></div>
     <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Title *</label><input type="text" class="form-control" id="cTitle" placeholder="What needs to be done?" autocomplete="off"></div>
     <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Work details *</label><textarea class="form-control" id="cDetails" rows="5" placeholder="Describe the ticket. Anyone can pick this up if you leave it unassigned."></textarea></div>
     <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Priority</label><select class="form-select" id="cPriority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
+    <div class="mb-3"><label class="cmd-type"><input type="checkbox" id="cSelf"><span><strong>I will do this</strong><small>Tag the ticket to yourself. Other admins can monitor your progress. Employees will not see it.</small></span></label></div>
   </div>
   <div class="modal-footer"><button type="button" class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button type="button" class="bsc bsc-p" style="padding:.55rem 1.2rem;min-height:44px" onclick="saveCmd()">Save ticket</button></div>
 </div></div></div>
@@ -510,7 +524,7 @@ firebase.initializeApp(FC);
 var auth=firebase.auth(),db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-var CU=null,aP={},aE={},aA={},aR={},aC={},curPage='pg-dash',feedMode='pending',repMode='today',adminName='Admin';
+var CU=null,aP={},aE={},aA={},aR={},aC={},aAdmins={},curPage='pg-dash',feedMode='pending',repMode='today',adminName='Admin';
 var cmdDragState=null,cmdSuppressClick=false,cmdRenderPending=false,cmdAssignId=null,cmdErrShown=false,cmdUiBound=false,cmdQueryTouched=false;
 var pPg=1,ePg=1,aPg=1,rPg=1;var PS=10;var c1=null,c2=null,c3=null;
 
@@ -601,7 +615,17 @@ function initDash(){
 function loadD(){
   db.ref('projects').on('value',function(s){aP=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-proj')renProj();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed()});
   db.ref('employees').on('value',function(s){aE=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-emp')renEmp();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed();if(curPage==='pg-cmd')renCmd()});
-  db.ref('assignments').on('value',function(s){aA=s.val()||{};if(curPage==='pg-assign')renAssign();if(curPage==='pg-dash')renDash()});
+  db.ref('assignments').on('value',function(s){aA=s.val()||{};if(curPage==='pg-assign')renAssign();if(curPage==='pg-dash')renDash();if(curPage==='pg-cmd')renCmd()});
+  db.ref('admins').on('value',function(s){
+    aAdmins=s.val()||{};
+    var me=CU&&aAdmins[CU.uid];
+    if(me&&(me.fullName||me.name)){
+      adminName=me.fullName||me.name;
+      var tn=document.getElementById('topNm');if(tn)tn.textContent=adminName;
+      var pn=document.getElementById('prNm');if(pn)pn.textContent=adminName;
+    }
+    if(curPage==='pg-cmd')renCmd();
+  });
   db.ref('reports').on('value',function(s){
     aR=s.val()||{};updBadge();
     if(curPage==='pg-dash')renDash();
@@ -829,10 +853,17 @@ function cmdDragEnd(e){
   endCmdDrag(false);
   if(moved)cmdSuppressClick=true;
   if(!moved||!col)return;
-  var emp=col.getAttribute('data-emp')||'';
+  var selfId=col.getAttribute('data-self')||'';
   var w=aC[id];
   if(!w||w.status==='completed')return;
-  if((w.assignedTo||'')===emp)return;
+  if(selfId){
+    if(selfId!==CU.uid){T('You can only tag a ticket to yourself','error');return}
+    if(w.selfTag&&(w.selfAdminId||w.assignedTo)===CU.uid)return;
+    tagSelfCmd(id);
+    return;
+  }
+  var emp=col.getAttribute('data-emp')||'';
+  if((w.assignedTo||'')===emp&&!w.selfTag)return;
   assignCommon(id,emp||null,false);
 }
 function cmdDragCancel(){endCmdDrag(false)}
@@ -858,13 +889,16 @@ function onCmdClick(e){
   else if(act==='del')delCmd(id);
   else if(act==='assign')openCmdAssign(id);
   else if(act==='reopen')reopenCmd(id);
+  else if(act==='anote')saveAdminNote(id);
+  else if(act==='adone')completeAdminCmd(id);
+  else if(act==='arelease')releaseAdminCmd(id);
 }
 function empEntries(){
   return Object.entries(aE).sort(function(a,b){return (a[1].fullName||'').localeCompare(b[1].fullName||'')});
 }
 function cmdMatch(w,q){
   if(!q)return true;
-  var hay=((w.title||'')+' '+(w.details||'')+' '+(w.assignedName||'')+' '+(w.progressNote||'')).toLowerCase();
+  var hay=((w.title||'')+' '+(w.details||'')+' '+(w.assignedName||'')+' '+(w.progressNote||'')+' '+(w.projectName||'')+' '+(w.projectCode||'')).toLowerCase();
   return hay.indexOf(q)!==-1;
 }
 function cmdWhen(w){
@@ -885,7 +919,7 @@ function cmdSort(list){
 function cmdActive(empUid,q){
   var list=[];
   Object.keys(aC).forEach(function(id){
-    var w=aC[id];if(!w||w.status==='completed')return;
+    var w=aC[id];if(!w||w.status==='completed'||w.selfTag)return;
     var assigned=w.assignedTo||'';
     if(empUid){if(assigned!==empUid)return}
     else if(assigned)return;
@@ -899,6 +933,42 @@ function cmdDelBtn(id,w){
   if(!cmdMine(w))return '';
   return '<button type="button" class="bsc bsc-o" data-act="del" data-id="'+id+'" aria-label="Delete"><i class="fas fa-trash"></i></button>';
 }
+function cmdLinkLabel(w){
+  if(w&&w.ticketType==='project'&&(w.projectName||w.projectCode))return '<span><i class="fas fa-folder"></i> '+escH(w.projectName||'Project')+(w.projectCode?' · '+escH(w.projectCode):'')+'</span>';
+  return '<span><i class="fas fa-ticket"></i> Free ticket</span>';
+}
+function projectStaff(projectId){
+  var seen={},list=[];
+  Object.values(aA).forEach(function(a){
+    if(!a||a.projectId!==projectId||!a.employeeId||seen[a.employeeId])return;
+    seen[a.employeeId]=true;
+    var emp=aE[a.employeeId]||{};
+    list.push({uid:a.employeeId,name:emp.fullName||a.employeeName||'Employee',code:emp.employeeId||a.employeeCode||''});
+  });
+  list.sort(function(a,b){return a.name.localeCompare(b.name)});
+  return list;
+}
+function onProjectTicket(w){return !!(w&&w.ticketType==='project'&&w.projectId)}
+function cmdAudienceLabel(w){
+  if(!onProjectTicket(w))return '<span><i class="fas fa-users"></i> Everyone</span>';
+  var people=projectStaff(w.projectId);
+  if(!people.length)return '<span><i class="fas fa-user-slash"></i> No one is assigned to this project yet</span>';
+  return '<span><i class="fas fa-user-check"></i> Only '+escH(people.map(function(p){return p.name}).join(', '))+'</span>';
+}
+function fillCmdProjects(selected){
+  var sel=document.getElementById('cProject');
+  var list=Object.entries(aP).map(function(e){return {id:e[0],p:e[1]||{}}});
+  list.sort(function(a,b){return (a.p.name||'').localeCompare(b.p.name||'')});
+  if(!list.length){sel.innerHTML='<option value="">No projects yet. Create a project first.</option>';return}
+  sel.innerHTML=list.map(function(item){return '<option value="'+item.id+'">'+escH(item.p.name||'Project')+(item.p.code?' ('+escH(item.p.code)+')':'')+'</option>'}).join('');
+  if(selected&&aP[selected])sel.value=selected;
+}
+function togCmdType(){
+  var picked=document.querySelector('input[name="cType"]:checked');
+  var project=!!(picked&&picked.value==='project');
+  document.getElementById('cProjWrap').style.display=project?'block':'none';
+  if(project)fillCmdProjects(document.getElementById('cProject').value);
+}
 function cmdCardHtml(id,w){
   var pr=w.priority||'Normal';
   var prc=cmdPrClass(pr);
@@ -907,15 +977,58 @@ function cmdCardHtml(id,w){
     +'<div class="cmd-grip" data-id="'+id+'" title="Drag to assign" aria-label="Drag to assign"><i class="fas fa-grip-vertical"></i></div>'
     +'<div class="cmd-card-main"><div class="cmd-card-title-row"><h6>'+escH(w.title||'Untitled')+'</h6><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span></div>'
     +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
-    +'<div class="cmd-meta"><span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span>'
+    +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span>'
     +(w.createdByName?'<span><i class="fas fa-user-shield"></i> '+escH(w.createdByName)+'</span>':'')
-    +(w.assignedName?'<span><i class="fas fa-user"></i> '+escH(w.assignedName)+'</span>':'<span><i class="fas fa-users"></i> Everyone</span>')
+    +(w.assignedName?'<span><i class="fas fa-user"></i> '+escH(w.assignedName)+'</span>':cmdAudienceLabel(w))
     +'</div>'+note
     +'<div class="cmd-actions">'
     +'<button type="button" class="bsc bsc-p" data-act="assign" data-id="'+id+'"><i class="fas fa-user-plus"></i> Assign</button>'
     +'<button type="button" class="bsc bsc-o" data-act="edit" data-id="'+id+'"><i class="fas fa-pen"></i> Edit</button>'
     +cmdDelBtn(id,w)
     +'</div></div></div></article>';
+}
+function adminLabel(uid){
+  var a=aAdmins[uid]||{};
+  if(a.fullName||a.name)return a.fullName||a.name;
+  if(a.email)return String(a.email).split('@')[0];
+  if(CU&&uid===CU.uid)return adminName||'Admin';
+  return 'Admin';
+}
+function selfOwner(w){return !!(CU&&w&&w.selfTag&&(w.selfAdminId||w.assignedTo)===CU.uid)}
+function cmdSelfList(adminUid,q){
+  var list=[];
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status==='completed'||!w.selfTag)return;
+    if((w.selfAdminId||w.assignedTo)!==adminUid)return;
+    if(!cmdMatch(w,q))return;
+    list.push({id:id,w:w});
+  });
+  return cmdSort(list);
+}
+function cmdSelfCardHtml(id,w){
+  var pr=w.priority||'Normal';
+  var prc=cmdPrClass(pr);
+  var mine=selfOwner(w);
+  var who=adminLabel(w.selfAdminId||w.assignedTo);
+  var grip=mine?'<div class="cmd-grip" data-id="'+id+'" title="Drag to move" aria-label="Drag to move"><i class="fas fa-grip-vertical"></i></div>':'<div class="cmd-grip" style="cursor:default" title="Another admin is doing this"><i class="fas fa-user-shield"></i></div>';
+  var body='<div class="cmd-details">'+escH(w.details||'')+'</div>'
+    +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-user-shield"></i> '+escH(who)+' is doing this</span></div>';
+  if(mine){
+    body+='<label style="font-size:.78rem;font-weight:700;color:var(--text-sec)">Progress for other admins</label>'
+      +'<textarea class="form-control admin-note" data-note-for="'+id+'" style="min-height:84px;margin:.35rem 0">'+escH(w.progressNote||'')+'</textarea>'
+      +'<div class="cmd-actions">'
+      +'<button type="button" class="bsc bsc-o" data-act="anote" data-id="'+id+'">Save progress</button>'
+      +'<button type="button" class="bsc bsc-p" data-act="adone" data-id="'+id+'"><i class="fas fa-check"></i> Mark completed</button>'
+      +'<button type="button" class="bsc bsc-o" data-act="arelease" data-id="'+id+'">Release to employees</button>'
+      +cmdDelBtn(id,w)
+      +'</div>';
+  }else{
+    body+='<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+(w.progressNote?escH(w.progressNote):'No progress note yet.')+'</div>';
+  }
+  return '<article class="cmd-card '+prc+'" data-id="'+id+'"><div class="cmd-card-top">'+grip
+    +'<div class="cmd-card-main"><div class="cmd-card-title-row"><h6>'+escH(w.title||'Untitled')+'</h6><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span></div>'
+    +body+'</div></div></article>';
 }
 function cmdQuery(){
   var el=document.getElementById('cmdSearch');
@@ -928,11 +1041,25 @@ function renCmd(){
   var board=document.getElementById('cmdBoard');if(!board)return;
   var q=cmdQuery();
   var sl=board.scrollLeft;
+  var focus=document.activeElement;
+  var keep=null;
+  if(focus&&focus.classList&&focus.classList.contains('admin-note'))keep={id:focus.getAttribute('data-note-for'),value:focus.value,sel:focus.selectionStart};
   var pool=cmdActive('',q);
   var html='<section class="cmd-col" data-emp=""><div class="cmd-col-h"><div class="cmd-pool-ic"><i class="fas fa-users"></i></div><div><div class="cmd-col-h-t">Open for everyone</div><div class="cmd-col-sub">Not assigned</div></div><span class="cmd-count">'+pool.length+'</span></div><div class="cmd-col-b">';
   if(!pool.length)html+='<div class="cmd-empty">Drop here to open this ticket for every employee.</div>';
   pool.forEach(function(item){html+=cmdCardHtml(item.id,item.w)});
   html+='</div></section>';
+  var adminIds=[];
+  if(CU)adminIds.push(CU.uid);
+  Object.keys(aAdmins).forEach(function(uid){if(adminIds.indexOf(uid)===-1&&cmdSelfList(uid,q).length)adminIds.push(uid)});
+  adminIds.forEach(function(uid){
+    var items=cmdSelfList(uid,q);
+    var mine=CU&&uid===CU.uid;
+    html+='<section class="cmd-col" data-self="'+uid+'" data-emp="__self__"><div class="cmd-col-h"><div class="cmd-av">'+ini(adminLabel(uid))+'</div><div style="min-width:0"><div class="cmd-col-h-t">'+escH(mine?'My work':adminLabel(uid))+'</div><div class="cmd-col-sub">'+(mine?'Tagged to you':'Admin · monitoring')+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
+    if(!items.length)html+='<div class="cmd-empty">Create a ticket and choose “I will do this”, or drop a ticket here to tag it to yourself.</div>';
+    items.forEach(function(item){html+=cmdSelfCardHtml(item.id,item.w)});
+    html+='</div></section>';
+  });
   empEntries().forEach(function(entry){
     var uid=entry[0],emp=entry[1];
     var items=cmdActive(uid,q);
@@ -943,9 +1070,13 @@ function renCmd(){
   });
   board.innerHTML=html;
   board.scrollLeft=sl;
+  if(keep){
+    var noteEl=board.querySelector('.admin-note[data-note-for="'+keep.id+'"]');
+    if(noteEl){noteEl.value=keep.value;noteEl.focus();if(typeof keep.sel==='number')noteEl.setSelectionRange(keep.sel,keep.sel)}
+  }
   var jump=document.getElementById('cmdJump');
   var jv=jump.value;
-  var jhtml='<option value="pool">Open for everyone</option>';
+  var jhtml='<option value="pool">Open for everyone</option><option value="self">My work</option>';
   empEntries().forEach(function(entry){jhtml+='<option value="'+entry[0]+'">'+escH(entry[1].fullName||'Employee')+'</option>'});
   jump.innerHTML=jhtml;
   if(Array.prototype.some.call(jump.options,function(o){return o.value===jv}))jump.value=jv;
@@ -962,7 +1093,7 @@ function renCmd(){
     var w=item.w;
     doneHtml+='<article class="cmd-card '+cmdPrClass(w.priority)+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div>'
       +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
-      +'<div class="cmd-meta"><span><i class="fas fa-user"></i> '+(w.assignedName?escH(w.assignedName):'Unassigned')+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span></div>'
+      +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-user"></i> '+(w.selfTag?'Admin · '+escH(w.assignedName||adminLabel(w.selfAdminId)):(w.assignedName?escH(w.assignedName):'Unassigned'))+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span></div>'
       +(w.progressNote?'<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>':'')
       +'<div class="cmd-meta"><span><i class="fas fa-user-shield"></i> '+(w.createdByName?escH(w.createdByName):'Unknown admin')+'</span></div>'
       +'<div class="cmd-actions"><button type="button" class="bsc bsc-p" data-act="reopen" data-id="'+item.id+'">Reopen</button>'+cmdDelBtn(item.id,w)+'</div></article>';
@@ -970,8 +1101,7 @@ function renCmd(){
   document.getElementById('cmdDoneList').innerHTML=doneHtml;
 }
 function jumpCmdCol(key){
-  var emp=key==='pool'?'':key;
-  var col=document.querySelector('#cmdBoard .cmd-col[data-emp="'+emp+'"]');
+  var col=key==='self'&&CU?document.querySelector('#cmdBoard .cmd-col[data-self="'+CU.uid+'"]'):document.querySelector('#cmdBoard .cmd-col[data-emp="'+(key==='pool'?'':key)+'"]');
   if(col)col.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
 }
 function openCmdM(id){
@@ -980,6 +1110,8 @@ function openCmdM(id){
   document.getElementById('cDetails').value='';
   document.getElementById('cPriority').value='Normal';
   document.getElementById('cmdMT').textContent='New Common Work';
+  var type='free',projectId='';
+  document.getElementById('cSelf').checked=false;
   if(id&&aC[id]){
     var w=aC[id];
     document.getElementById('cEditId').value=id;
@@ -987,7 +1119,13 @@ function openCmdM(id){
     document.getElementById('cDetails').value=w.details||'';
     document.getElementById('cPriority').value=w.priority||'Normal';
     document.getElementById('cmdMT').textContent='Edit Work';
+    if(w.ticketType==='project'&&w.projectId){type='project';projectId=w.projectId}
+    if(selfOwner(w))document.getElementById('cSelf').checked=true;
   }
+  var radios=document.querySelectorAll('input[name="cType"]');
+  radios.forEach(function(r){r.checked=r.value===type});
+  fillCmdProjects(projectId);
+  togCmdType();
   new bootstrap.Modal(document.getElementById('cmdModal')).show();
 }
 async function saveCmd(){
@@ -995,18 +1133,48 @@ async function saveCmd(){
   var details=document.getElementById('cDetails').value.trim();
   var priority=document.getElementById('cPriority').value||'Normal';
   if(!title||!details){T('Title and details are required','error');return}
+  var picked=document.querySelector('input[name="cType"]:checked');
+  var ticketType=picked&&picked.value==='project'?'project':'free';
+  var projectId='',projectName='',projectCode='';
+  if(ticketType==='project'){
+    projectId=document.getElementById('cProject').value;
+    var proj=aP[projectId];
+    if(!proj){T('Choose a project for this ticket','error');return}
+    projectName=proj.name||'';
+    projectCode=proj.code||'';
+  }
+  var wantSelf=!!document.getElementById('cSelf').checked;
   var now=Date.now();
-  var data={title:title,details:details,priority:priority,updatedAt:now};
+  var data={title:title,details:details,priority:priority,ticketType:ticketType,projectId:projectId,projectName:projectName,projectCode:projectCode,updatedAt:now};
   var eid=document.getElementById('cEditId').value;
+  var prev=eid?(aC[eid]||{}):{};
+  if(wantSelf){
+    data.selfTag=true;data.selfAdminId=CU.uid;data.assignedTo=CU.uid;data.assignedName=adminName;data.assignedCode='ADMIN';
+    if(prev.status!=='completed')data.status='progress';
+    data.assignedAt=now;
+    if(!prev.takenAt)data.takenAt=now;
+  }else if(prev.selfTag&&selfOwner(prev)){
+    data.selfTag=false;data.selfAdminId='';data.assignedTo='';data.assignedName='';data.assignedCode='';
+    data.status='open';data.takenAt=0;data.assignedAt=0;
+  }
   sL();
   try{
-    if(eid){await db.ref('commonWorks/'+eid).update(data);T('Ticket updated','success')}
+    if(eid){await db.ref('commonWorks/'+eid).update(data);T(wantSelf?'Ticket tagged to you':'Ticket updated','success')}
     else{
-      data.status='open';data.assignedTo='';data.assignedName='';data.assignedCode='';
-      data.progressNote='';data.createdAt=now;data.createdDate=tS();
+      if(!wantSelf){
+        data.status='open';data.assignedTo='';data.assignedName='';data.assignedCode='';
+        data.selfTag=false;data.selfAdminId='';
+      }
+      data.progressNote=data.progressNote||'';data.createdAt=now;data.createdDate=tS();
       data.createdBy=CU.uid;data.createdByName=adminName;
       await db.ref('commonWorks/'+gId()).set(data);
-      T('Ticket created for everyone','success');
+      T(wantSelf?'Tagged to you. Other admins can monitor your progress':ticketType==='project'?'Ticket created for people assigned to this project':'Ticket created for everyone','success');
+    }
+    if(eid&&ticketType==='project'&&!wantSelf&&!prev.selfTag){
+      var allowed=projectStaff(projectId).some(function(p){return p.uid===prev.assignedTo});
+      if(prev.assignedTo&&!allowed&&prev.status!=='completed'){
+        await db.ref('commonWorks/'+eid).update({assignedTo:'',assignedName:'',assignedCode:'',status:'open',takenAt:0,assignedAt:0,progressNote:''});
+      }
     }
     var modal=bootstrap.Modal.getInstance(document.getElementById('cmdModal'));
     if(modal)modal.hide();
@@ -1018,6 +1186,7 @@ function delCmd(id){
   if(!cmdMine(w)){T('Only the admin who created this ticket can delete it','error');return}
   document.getElementById('cfmT').textContent='Delete ticket?';
   document.getElementById('cfmM').textContent='Delete "'+(w.title||'this ticket')+'"?';
+  document.getElementById('cfmB').textContent='Delete';
   document.getElementById('cfmB').onclick=async function(){
     sL();
     try{await db.ref('commonWorks/'+id).remove();bootstrap.Modal.getInstance(document.getElementById('cfmModal')).hide();hL();T('Ticket deleted','success')}
@@ -1030,12 +1199,15 @@ function openCmdAssign(id){
   cmdAssignId=id;
   document.getElementById('cmdAssignTitle').textContent=w.title||'Ticket';
   var current=w.assignedTo||'';
-  var html='<button type="button" class="cmd-pick'+(!current?' active':'')+'" data-uid=""><span class="cmd-av"><i class="fas fa-users"></i></span><span><strong>Everyone</strong><small>Leave it open so any employee can take it</small></span></button>';
-  empEntries().forEach(function(entry){
-    var uid=entry[0],emp=entry[1];
-    html+='<button type="button" class="cmd-pick'+(current===uid?' active':'')+'" data-uid="'+uid+'"><span class="cmd-av">'+ini(emp.fullName||'E')+'</span><span><strong>'+escH(emp.fullName||'Employee')+'</strong><small>'+escH(emp.employeeId||'')+'</small></span></button>';
+  var project=onProjectTicket(w);
+  var people=project?projectStaff(w.projectId):empEntries().map(function(entry){return {uid:entry[0],name:entry[1].fullName||'Employee',code:entry[1].employeeId||''}});
+  var openTitle=project?'People on this project':'Everyone';
+  var openSub=project?'Leave it open for the people already assigned to this project':'Leave it open so any employee can take it';
+  var html='<button type="button" class="cmd-pick'+(!current?' active':'')+'" data-uid=""><span class="cmd-av"><i class="fas fa-users"></i></span><span><strong>'+openTitle+'</strong><small>'+openSub+'</small></span></button>';
+  people.forEach(function(person){
+    html+='<button type="button" class="cmd-pick'+(current===person.uid?' active':'')+'" data-uid="'+person.uid+'"><span class="cmd-av">'+ini(person.name||'E')+'</span><span><strong>'+escH(person.name||'Employee')+'</strong><small>'+escH(person.code||'')+'</small></span></button>';
   });
-  if(!Object.keys(aE).length)html+='<div class="cmd-empty">No employees yet. The ticket can still stay open for everyone.</div>';
+  if(!people.length)html+='<div class="cmd-empty">'+(project?'No employees are assigned to this project yet. Assign the project first, then this ticket can be given to those people.':'No employees yet. The ticket can still stay open for everyone.')+'</div>';
   document.getElementById('cmdEmpPick').innerHTML=html;
   new bootstrap.Modal(document.getElementById('cmdAssignModal')).show();
 }
@@ -1044,12 +1216,18 @@ async function assignCommon(id,empUid,spin){
   if(w.status==='completed'){T('Reopen this ticket before assigning it','error');return}
   var next=empUid||'';
   if((w.assignedTo||'')===next)return;
+  if(empUid&&onProjectTicket(w)&&!projectStaff(w.projectId).some(function(p){return p.uid===empUid})){
+    T('This project ticket can only go to people assigned to that project','error');
+    return;
+  }
   var emp=empUid?(aE[empUid]||{}):null;
   var data={
     assignedTo:empUid||'',
     assignedName:emp?(emp.fullName||''):'',
     assignedCode:emp?(emp.employeeId||''):'',
     status:empUid?'progress':'open',
+    selfTag:false,
+    selfAdminId:'',
     updatedAt:Date.now(),
     assignedAt:empUid?Date.now():0,
     takenAt:0
@@ -1059,8 +1237,71 @@ async function assignCommon(id,empUid,spin){
   try{
     await db.ref('commonWorks/'+id).update(data);
     if(spin!==false)hL();
-    T(empUid?('Assigned to '+(emp.fullName||'employee')):'Open for everyone','success');
+    T(empUid?('Assigned to '+(emp.fullName||'employee')):(onProjectTicket(w)?'Open for people on this project':'Open for everyone'),'success');
   }catch(e){if(spin!==false)hL();T(e.message,'error')}
+}
+function adminNoteText(id){
+  var el=document.querySelector('.admin-note[data-note-for="'+id+'"]');
+  if(el)return el.value.trim();
+  return ((aC[id]||{}).progressNote)||'';
+}
+async function tagSelfCmd(id){
+  var w=aC[id];if(!w||w.status==='completed')return;
+  sL();
+  try{
+    await db.ref('commonWorks/'+id).update({
+      selfTag:true,selfAdminId:CU.uid,assignedTo:CU.uid,assignedName:adminName,assignedCode:'ADMIN',
+      status:'progress',assignedAt:Date.now(),takenAt:w.takenAt||Date.now(),updatedAt:Date.now()
+    });
+    hL();T('Tagged to you. Other admins can monitor your progress','success');
+  }catch(e){hL();T(e.message,'error')}
+}
+function saveAdminNote(id){
+  var w=aC[id];
+  if(!selfOwner(w)){T('Only the admin doing this ticket can update progress','error');return}
+  sL();
+  db.ref('commonWorks/'+id).update({progressNote:adminNoteText(id),updatedAt:Date.now()}).then(function(){hL();T('Progress saved','success')}).catch(function(e){hL();T(e.message,'error')});
+}
+function completeAdminCmd(id){
+  var w=aC[id];
+  if(!selfOwner(w)){T('Only the admin doing this ticket can complete it','error');return}
+  document.getElementById('cfmT').textContent='Mark as completed?';
+  document.getElementById('cfmM').textContent='Other admins will see this ticket as finished, with your progress note.';
+  document.getElementById('cfmB').textContent='Complete';
+  document.getElementById('cfmB').onclick=async function(){
+    var now=new Date();
+    var dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    var timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    sL();
+    try{
+      await db.ref('commonWorks/'+id).update({
+        status:'completed',progressNote:adminNoteText(id),completedAt:now.getTime(),completedDate:dateStr,completedTime:timeStr,updatedAt:now.getTime()
+      });
+      var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
+      if(modal)modal.hide();
+      hL();T('Completed. Other admins can see it in the finished list','success');
+    }catch(e){hL();T(e.message,'error')}
+  };
+  new bootstrap.Modal(document.getElementById('cfmModal')).show();
+}
+function releaseAdminCmd(id){
+  var w=aC[id];
+  if(!selfOwner(w)){T('Only the admin doing this ticket can release it','error');return}
+  document.getElementById('cfmT').textContent='Release this ticket?';
+  document.getElementById('cfmM').textContent=onProjectTicket(w)?'It will show again for people assigned to this project.':'It will show again for employees.';
+  document.getElementById('cfmB').textContent='Release';
+  document.getElementById('cfmB').onclick=async function(){
+    sL();
+    try{
+      await db.ref('commonWorks/'+id).update({
+        selfTag:false,selfAdminId:'',assignedTo:'',assignedName:'',assignedCode:'',status:'open',takenAt:0,assignedAt:0,updatedAt:Date.now()
+      });
+      var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
+      if(modal)modal.hide();
+      hL();T('Ticket released','success');
+    }catch(e){hL();T(e.message,'error')}
+  };
+  new bootstrap.Modal(document.getElementById('cfmModal')).show();
 }
 async function reopenCmd(id){
   var w=aC[id];if(!w)return;

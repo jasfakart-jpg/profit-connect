@@ -242,7 +242,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <div id="homeProjE" class="empty-s" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned. Contact admin.</p></div>
 </div>
 <div id="pg-cmd" class="page">
-<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Tickets left open by admin show here for every employee. Add one to your progress list, or work on a ticket assigned to you.</p>
+<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Free tickets that are still open show here for every employee. A project ticket shows only if you are assigned to that project.</p>
 <div class="emp-tabs" id="empCmdTabs">
 <button type="button" class="emp-tab active" data-tab="open">Open <span id="tabOpenC">0</span></button>
 <button type="button" class="emp-tab" data-tab="mine">My progress <span id="tabMineC">0</span></button>
@@ -377,7 +377,8 @@ function loadD(){
   db.ref('assignments').on('value',function(s){
     var all=s.val()||{};myA={};
     Object.keys(all).forEach(function(id){if(all[id].employeeId===CU.uid)myA[id]=all[id]});
-    if(curPage==='pg-home')renHome();if(curPage==='pg-work')renWorkPage();if(curPage==='pg-hist')loadHist();
+    updEmpCmdBadge();
+    if(curPage==='pg-home')renHome();if(curPage==='pg-work')renWorkPage();if(curPage==='pg-hist')loadHist();if(curPage==='pg-cmd')renEmpCmd();
   });
   db.ref('reports').on('value',function(s){
     var all=s.val()||{};myR={};
@@ -636,8 +637,18 @@ function onEmpCmdClick(e){
   else if(act==='done')completeCommon(id);
   else if(act==='release')releaseCommon(id);
 }
+function myProjectIds(){
+  var ids={};
+  Object.values(myA).forEach(function(a){if(a&&a.projectId)ids[a.projectId]=true});
+  return ids;
+}
+function empCanSeeCmd(w){
+  if(!w||w.selfTag)return false;
+  if(w.ticketType!=='project'||!w.projectId)return true;
+  return !!myProjectIds()[w.projectId];
+}
 function updEmpCmdBadge(){
-  var n=0;Object.values(aC).forEach(function(w){if(w&&w.status!=='completed'&&!w.assignedTo)n++});
+  var n=splitCmd().open.length;
   var b=document.getElementById('cmdNavCount');if(!b)return;
   b.style.display=n?'inline-flex':'none';b.textContent=n>99?'99+':n;
 }
@@ -659,7 +670,7 @@ function cmdRankSort(list){
 function splitCmd(){
   var open=[],mine=[],done=[];
   Object.keys(aC).forEach(function(id){
-    var w=aC[id];if(!w)return;
+    var w=aC[id];if(!w||!empCanSeeCmd(w))return;
     var item={id:id,w:w};
     if(w.status==='completed'&&w.assignedTo===CU.uid)done.push(item);
     else if(w.assignedTo===CU.uid)mine.push(item);
@@ -676,7 +687,7 @@ function empCmdQuery(){
 function cmdSearchMatch(w){
   var q=empCmdQuery();
   if(!q)return true;
-  return ((w.title||'')+' '+(w.details||'')+' '+(w.createdByName||'')+' '+(w.progressNote||'')).toLowerCase().indexOf(q)!==-1;
+  return ((w.title||'')+' '+(w.details||'')+' '+(w.createdByName||'')+' '+(w.progressNote||'')+' '+(w.projectName||'')+' '+(w.projectCode||'')).toLowerCase().indexOf(q)!==-1;
 }
 function renHomeCmd(){
   var box=document.getElementById('homeCmd');if(!box)return;
@@ -712,7 +723,8 @@ function renEmpCmd(){
 function empTicketHtml(id,w,mode,full){
   var pr=w.priority||'Normal';
   var prc=cmdPrClass(pr);
-  var html='<article class="emp-ticket '+prc+'"><div class="meta"><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span><span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span><span><i class="fas fa-user-shield"></i> '+escH(w.createdByName||'Admin')+'</span></div>';
+  var link=(w.ticketType==='project'&&(w.projectName||w.projectCode))?'<span><i class="fas fa-folder"></i> '+escH(w.projectName||'Project')+(w.projectCode?' · '+escH(w.projectCode):'')+'</span>':'<span><i class="fas fa-ticket"></i> Free ticket</span>';
+  var html='<article class="emp-ticket '+prc+'"><div class="meta"><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span>'+link+'<span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span><span><i class="fas fa-user-shield"></i> '+escH(w.createdByName||'Admin')+'</span></div>';
   html+='<h6>'+escH(w.title||'Untitled')+'</h6>';
   if(full)html+='<div class="body">'+escH(w.details||'')+'</div>';
   else html+='<div class="body" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">'+escH(w.details||'')+'</div>';
@@ -736,6 +748,8 @@ function empTicketHtml(id,w,mode,full){
   return html;
 }
 function takeCommon(id,goMine){
+  var ticket=aC[id];
+  if(!ticket||!empCanSeeCmd(ticket)){T('This ticket is only for people assigned to that project','error');return}
   var now=Date.now();
   sL();
   db.ref('commonWorks/'+id).transaction(function(cur){
@@ -775,7 +789,9 @@ function saveCommonReport(id,w,dateStr,timeStr,ts){
   var rid=gId();
   var data={
     employeeId:CU.uid,employeeName:myD.fullName||w.assignedName||'',employeeCode:myD.employeeId||w.assignedCode||'',
-    projectId:'common',projectName:w.title||'Common Work',projectCode:'COMMON',
+    projectId:(w.ticketType==='project'&&w.projectId)?w.projectId:'common',
+    projectName:(w.ticketType==='project'&&w.projectId)?(w.projectName||'Project'):(w.title||'Common Work'),
+    projectCode:(w.ticketType==='project'&&w.projectId)?(w.projectCode||''):'COMMON',
     workDetails:details,createdDate:dateStr,createdTime:timeStr,
     month:parts[1]||'',year:parts[0]||'',timestamp:ts,status:'completed',
     completedDate:dateStr,completedTime:timeStr,source:'common',commonWorkId:id
@@ -819,7 +835,9 @@ function completeCommon(id){
 }
 function releaseCommon(id){
   document.getElementById('cfmT').textContent='Release this ticket?';
-  document.getElementById('cfmM').textContent='It will show again for every employee.';
+  var ticket=aC[id]||{};
+  var forProject=ticket.ticketType==='project'&&ticket.projectId;
+  document.getElementById('cfmM').textContent=forProject?'It will show again only for people assigned to this project.':'It will show again for every employee.';
   document.getElementById('cfmB').onclick=function(){
     sL();
     db.ref('commonWorks/'+id).transaction(function(cur){
@@ -841,7 +859,7 @@ function releaseCommon(id){
       if(!res.committed){T('Could not release this ticket','error');return}
       empCmdTab='open';
       if(curPage==='pg-cmd')renEmpCmd();
-      T('Ticket is open for everyone','success');
+      T(forProject?'Ticket is open for people on this project':'Ticket is open for everyone','success');
     }).catch(function(e){hL();T(e.message,'error')});
   };
   new bootstrap.Modal(document.getElementById('cfmModal')).show();
