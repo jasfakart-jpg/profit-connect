@@ -175,16 +175,16 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 .track-filters{display:grid;grid-template-columns:minmax(180px,1.4fr) repeat(2,minmax(140px,.6fr)) auto;gap:.6rem;margin-bottom:.8rem;align-items:end}
 .track-filters label{display:block;font-size:.72rem;font-weight:700;color:var(--text-sec);text-transform:uppercase;margin-bottom:.25rem}
 .track-sum{color:var(--text-sec);font-size:.84rem;margin:0 0 .8rem}
-.track-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.85rem}
-.track-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:.95rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.45rem;min-width:0}
+.track-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.85rem;align-items:start}
+.track-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:.95rem;box-shadow:var(--shadow);min-width:0;height:auto;overflow:visible}
 .track-card.done{border-top:4px solid var(--success)}
 .track-card.progress{border-top:4px solid var(--accent)}
 .track-card.open,.track-card.pending{border-top:4px solid var(--primary)}
-.track-card h6{margin:0;font-size:1rem;line-height:1.35;overflow-wrap:anywhere}
-.track-body{margin:0;color:var(--text-sec);font-size:.86rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.track-who{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:.88rem}
+.track-card h6{margin:.45rem 0 0;font-size:1rem;line-height:1.35;overflow-wrap:anywhere}
+.track-body{margin:.35rem 0 0;color:var(--text-sec);font-size:.86rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;max-height:7.2em;overflow:auto}
+.track-who{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:.88rem;margin-top:.55rem}
 .track-av{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;flex-shrink:0}
-.track-dates{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.track-dates{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-top:.55rem}
 .track-dates div{background:var(--bg);border-radius:10px;padding:.45rem .55rem}
 .track-dates small{display:block;color:var(--text-sec);font-size:.68rem;font-weight:700;text-transform:uppercase}
 .track-dates strong{font-size:.82rem}
@@ -343,13 +343,13 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="sidebar-header"><h5><i class="fas fa-bolt" style="color:var(--accent)"></i> PTDC Admin</h5><small>Profit Traders Developers Connect</small></div>
     <nav class="sidebar-nav">
       <div class="nav-item active" data-p="pg-dash" onclick="nav(this,'pg-dash')"><i class="fas fa-th-large"></i> Dashboard</div>
+      <div class="nav-item" data-p="pg-track" onclick="nav(this,'pg-track')"><i class="fas fa-border-all"></i> All Track</div>
       <div class="nav-item" data-p="pg-feed" onclick="nav(this,'pg-feed')"><i class="fas fa-rss"></i> Work Feed</div>
       <div class="nav-item" data-p="pg-proj" onclick="nav(this,'pg-proj')"><i class="fas fa-folder-open"></i> Projects</div>
       <div class="nav-item" data-p="pg-emp" onclick="nav(this,'pg-emp')"><i class="fas fa-users"></i> Employees</div>
       <div class="nav-item" data-p="pg-admins" onclick="nav(this,'pg-admins')"><i class="fas fa-user-shield"></i> Manage Admins</div>
       <div class="nav-item" data-p="pg-assign" onclick="nav(this,'pg-assign')"><i class="fas fa-user-check"></i> Assignments</div>
       <div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
-      <div class="nav-item" data-p="pg-track" onclick="nav(this,'pg-track')"><i class="fas fa-border-all"></i> All Track</div>
       <div class="nav-item" data-p="pg-rep" onclick="nav(this,'pg-rep')"><i class="fas fa-clipboard-list"></i> Reports</div>
       <div class="nav-item" data-p="pg-hist" onclick="nav(this,'pg-hist')"><i class="fas fa-clock-rotate-left"></i> Work History</div>
       <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
@@ -525,9 +525,9 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
   </div>
   <nav class="app-tab" aria-label="Admin">
     <button type="button" class="active" data-p="pg-dash" onclick="nav(document.querySelector('.sidebar [data-p=pg-dash]'),'pg-dash')"><i class="fas fa-th-large"></i><span>Home</span></button>
+    <button type="button" data-p="pg-track" onclick="nav(document.querySelector('.sidebar [data-p=pg-track]'),'pg-track')"><i class="fas fa-border-all"></i><span>Track</span></button>
     <button type="button" data-p="pg-cmd" onclick="nav(document.querySelector('.sidebar [data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-bullhorn"></i><span>Common</span></button>
     <button type="button" data-p="pg-feed" onclick="nav(document.querySelector('.sidebar [data-p=pg-feed]'),'pg-feed')"><i class="fas fa-rss"></i><span>Feed</span></button>
-    <button type="button" data-p="pg-rep" onclick="nav(document.querySelector('.sidebar [data-p=pg-rep]'),'pg-rep')"><i class="fas fa-clipboard-list"></i><span>Reports</span></button>
     <button type="button" onclick="togSide()"><i class="fas fa-ellipsis"></i><span>More</span></button>
   </nav>
 </div>
