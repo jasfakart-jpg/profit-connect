@@ -168,6 +168,29 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 .cmd-type strong{display:block;font-size:.92rem}
 .cmd-type small{display:block;color:var(--text-sec);font-size:.78rem;font-weight:500}
 .cmd-section-h{font-weight:800;margin:1.25rem 0 .75rem}
+.track-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:0 0 1rem}
+.track-tab{border:1px solid var(--border);background:var(--bg-card);color:var(--text-sec);border-radius:999px;padding:.55rem .95rem;font-weight:700;font-size:.85rem;cursor:pointer;min-height:44px}
+.track-tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.track-tab span{margin-left:.35rem}
+.track-filters{display:grid;grid-template-columns:minmax(180px,1.4fr) repeat(2,minmax(140px,.6fr)) auto;gap:.6rem;margin-bottom:.8rem;align-items:end}
+.track-filters label{display:block;font-size:.72rem;font-weight:700;color:var(--text-sec);text-transform:uppercase;margin-bottom:.25rem}
+.track-sum{color:var(--text-sec);font-size:.84rem;margin:0 0 .8rem}
+.track-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.85rem}
+.track-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:.95rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.45rem;min-width:0}
+.track-card.done{border-top:4px solid var(--success)}
+.track-card.progress{border-top:4px solid var(--accent)}
+.track-card.open,.track-card.pending{border-top:4px solid var(--primary)}
+.track-card h6{margin:0;font-size:1rem;line-height:1.35;overflow-wrap:anywhere}
+.track-body{margin:0;color:var(--text-sec);font-size:.86rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.track-who{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:.88rem}
+.track-av{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;flex-shrink:0}
+.track-dates{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.track-dates div{background:var(--bg);border-radius:10px;padding:.45rem .55rem}
+.track-dates small{display:block;color:var(--text-sec);font-size:.68rem;font-weight:700;text-transform:uppercase}
+.track-dates strong{font-size:.82rem}
+.track-note{font-size:.8rem;background:var(--bg);border-radius:8px;padding:.4rem .55rem;overflow-wrap:anywhere}
+.track-note i{color:var(--primary);margin-right:.3rem}
+@media(max-width:768px){.track-filters{grid-template-columns:1fr}.track-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
   .cmd-col{flex-basis:86vw}
   .cmd-tools .form-control,.cmd-tools .form-select{max-width:none;flex:1 1 100%}
@@ -326,6 +349,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <div class="nav-item" data-p="pg-admins" onclick="nav(this,'pg-admins')"><i class="fas fa-user-shield"></i> Manage Admins</div>
       <div class="nav-item" data-p="pg-assign" onclick="nav(this,'pg-assign')"><i class="fas fa-user-check"></i> Assignments</div>
       <div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
+      <div class="nav-item" data-p="pg-track" onclick="nav(this,'pg-track')"><i class="fas fa-border-all"></i> All Track</div>
       <div class="nav-item" data-p="pg-rep" onclick="nav(this,'pg-rep')"><i class="fas fa-clipboard-list"></i> Reports</div>
       <div class="nav-item" data-p="pg-hist" onclick="nav(this,'pg-hist')"><i class="fas fa-clock-rotate-left"></i> Work History</div>
       <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
@@ -444,6 +468,22 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
         </div>
         <div style="display:flex;justify-content:flex-end;margin-bottom:1rem"><button class="bsc bsc-a" onclick="expExcel()"><i class="fas fa-file-excel"></i> Download Excel</button></div>
         <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Time</th><th>Employee</th><th>ID</th><th>Project</th><th>Work</th><th>Status</th><th>Created</th><th>Completed</th></tr></thead><tbody id="repTB"></tbody></table></div><div id="repE" class="empty-s" style="display:none"><i class="fas fa-clipboard-list"></i><p>No reports</p></div><div class="pag-w" id="repPag"></div></div>
+      </div>
+
+      <div id="pg-track" class="page">
+        <p style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Every admin login sees this. Admin works are tickets an admin tagged to themselves. Employee works are the jobs employees created or finished. Cards show who did it, when it was created, and when it was completed.</p>
+        <div class="track-tabs" id="trackTabs">
+          <button type="button" class="track-tab active" data-tab="admin" onclick="setTrack('admin')">Admin works <span id="trackAdC">0</span></button>
+          <button type="button" class="track-tab" data-tab="emp" onclick="setTrack('emp')">Employee works <span id="trackEmpC">0</span></button>
+        </div>
+        <div class="track-filters">
+          <div><label>Search</label><input type="search" class="form-control" id="trackQ" placeholder="Name, title, or project" oninput="renTrack()" autocomplete="off"></div>
+          <div><label>From</label><input type="date" class="form-control" id="trackFrom" onchange="renTrack()"></div>
+          <div><label>To</label><input type="date" class="form-control" id="trackTo" onchange="renTrack()"></div>
+          <div><label>&nbsp;</label><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="clrTrack()">Clear</button></div>
+        </div>
+        <p class="track-sum" id="trackSum"></p>
+        <div class="track-grid" id="trackList"></div>
       </div>
 
       <div id="pg-hist" class="page">
@@ -600,7 +640,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
 var CU=null,aP={},aE={},aA={},aR={},aC={},aAdmins={},curPage='pg-dash',feedMode='pending',repMode='today',adminName='Admin';
 var cmdDragState=null,cmdSuppressClick=false,cmdRenderPending=false,cmdAssignId=null,cmdErrShown=false,cmdUiBound=false,cmdQueryTouched=false;
-var pPg=1,ePg=1,aPg=1,rPg=1,adPg=1,histPg=1;var PS=10;var c1=null,c2=null,c3=null;
+var pPg=1,ePg=1,aPg=1,rPg=1,adPg=1,histPg=1,trackTab='admin';var PS=10;var c1=null,c2=null,c3=null;
 
 /* ===== UTILS ===== */
 function T(m,t){t=t||'info';var c=document.getElementById('toastC');var ic={success:'fa-check-circle',error:'fa-times-circle',info:'fa-info-circle'};var d=document.createElement('div');d.className='ct '+t;d.innerHTML='<i class="fas '+(ic[t]||ic.info)+'"></i> '+m;c.appendChild(d);setTimeout(function(){d.style.opacity='0';d.style.transform='translateX(100%)';d.style.transition='all .3s';setTimeout(function(){d.remove()},300)},3500)}
@@ -625,7 +665,7 @@ var sv=localStorage.getItem('ptdc-theme');if(sv)document.documentElement.setAttr
 function nav(el,pid){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});if(el)el.classList.add('active');
   document.querySelectorAll('.content-area .page').forEach(function(p){p.classList.remove('active')});document.getElementById(pid).classList.add('active');
-  var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-admins':'Manage Admins','pg-assign':'Assignments','pg-cmd':'Common Works','pg-rep':'Reports','pg-hist':'Work History','pg-prof':'Profile'};
+  var t={'pg-dash':'Dashboard','pg-feed':'Work Feed','pg-proj':'Projects','pg-emp':'Employees','pg-admins':'Manage Admins','pg-assign':'Assignments','pg-cmd':'Common Works','pg-track':'All Track','pg-rep':'Reports','pg-hist':'Work History','pg-prof':'Profile'};
   document.getElementById('pgTitle').textContent=t[pid]||'Dashboard';
   document.querySelectorAll('.app-tab [data-p]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===pid)});
   curPage=pid;
@@ -644,6 +684,7 @@ function renCurPage(){
   if(curPage==='pg-hist')renHist();
   if(curPage==='pg-assign')renAssign();
   if(curPage==='pg-cmd')renCmd();
+  if(curPage==='pg-track')renTrack();
   if(curPage==='pg-rep'){popRepF();renRep()}
   if(curPage==='pg-prof')renProf();
 }
@@ -703,6 +744,7 @@ function loadD(){
     if(CU&&Object.keys(aAdmins).length&&!aAdmins[CU.uid]){auth.signOut();return}
     if(curPage==='pg-cmd')renCmd();
     if(curPage==='pg-admins')renAdmins();
+    if(curPage==='pg-track')renTrack();
   });
   db.ref('reports').on('value',function(s){
     aR=s.val()||{};updBadge();
@@ -710,11 +752,13 @@ function loadD(){
     if(curPage==='pg-rep')renRep();
     if(curPage==='pg-feed')renFeed();
     if(curPage==='pg-hist')renHist();
+    if(curPage==='pg-track')renTrack();
   });
   db.ref('commonWorks').on('value',function(s){
     aC=s.val()||{};updCmdNav();
     if(curPage==='pg-dash')renDash();
     if(curPage==='pg-cmd')renCmd();
+    if(curPage==='pg-track')renTrack();
   },function(err){if(!cmdErrShown){cmdErrShown=true;T(err.message,'error')}});
 }
 function updBadge(){var t=tS(),c=0;Object.values(aR).forEach(function(r){if(r.createdDate===t)c++});var b=document.getElementById('notifB');if(c>0){b.style.display='flex';b.textContent=c>99?'99+':c}else b.style.display='none'}
@@ -1067,6 +1111,106 @@ function delAdmin(uid){
     }catch(e){hL();T(e.message,'error')}
   };
   new bootstrap.Modal(document.getElementById('cfmModal')).show();
+}
+function setTrack(tab){trackTab=tab;renTrack()}
+function clrTrack(){
+  document.getElementById('trackQ').value='';
+  document.getElementById('trackFrom').value='';
+  document.getElementById('trackTo').value='';
+  renTrack();
+}
+function trackInRange(created,completed){
+  var from=document.getElementById('trackFrom').value;
+  var to=document.getElementById('trackTo').value;
+  if(!from&&!to)return true;
+  function inside(d){if(!d)return false;if(from&&d<from)return false;if(to&&d>to)return false;return true}
+  return inside(created)||inside(completed);
+}
+function trackSearch(text){
+  var q=(document.getElementById('trackQ').value||'').trim().toLowerCase();
+  if(!q)return true;
+  return text.toLowerCase().indexOf(q)!==-1;
+}
+function trackStatus(s){
+  if(s==='completed')return {cls:'done',label:'Completed'};
+  if(s==='progress')return {cls:'progress',label:'In progress'};
+  if(s==='pending')return {cls:'pending',label:'Pending'};
+  return {cls:'open',label:'Open'};
+}
+function trackCard(item){
+  var st=trackStatus(item.status);
+  var done=item.completed?fD(item.completed)+(item.completedTime?' '+item.completedTime:''):'Not completed yet';
+  var made=item.created?fD(item.created)+(item.createdTime?' '+item.createdTime:''):'—';
+  return '<article class="track-card '+st.cls+'">'
+    +'<div style="display:flex;justify-content:space-between;gap:.4rem;align-items:center"><span class="bs '+(st.cls==='done'?'bs-done':st.cls==='progress'?'bs-pending':'bs-active')+'">'+st.label+'</span>'+(item.priority?'<span class="pr-pill pr-'+cmdPrClass(item.priority)+'">'+escH(item.priority)+'</span>':'')+'</div>'
+    +'<h6>'+escH(item.title||'Work')+'</h6>'
+    +(item.details?'<p class="track-body">'+escH(item.details)+'</p>':'')
+    +'<div class="track-who"><span class="track-av">'+ini(item.who||'?')+'</span><span>'+escH(item.who||'Unknown')+(item.code?'<br><small style="font-weight:600;color:var(--text-sec)">'+escH(item.code)+'</small>':'')+'</span></div>'
+    +'<div class="track-dates"><div><small>Created</small><strong>'+made+'</strong></div><div><small>Completed</small><strong>'+done+'</strong></div></div>'
+    +(item.project?'<div class="track-note"><i class="fas fa-folder"></i>'+escH(item.project)+'</div>':'')
+    +(item.note?'<div class="track-note"><i class="fas fa-comment-dots"></i>'+escH(item.note)+'</div>':'')
+    +'</article>';
+}
+function trackAdminItems(){
+  var list=[];
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];if(!w||!w.selfTag)return;
+    var who=w.assignedName||adminLabel(w.selfAdminId||w.assignedTo);
+    list.push({
+      title:w.title||'Admin work',details:w.details||'',who:who,code:'Admin',
+      created:w.createdDate||'',createdTime:'',completed:w.completedDate||'',completedTime:w.completedTime||'',
+      status:w.status||'open',priority:w.priority||'',note:w.progressNote||'',
+      project:w.ticketType==='project'?(w.projectName||'Project')+' '+(w.projectCode||''):'Free ticket',
+      sort:w.completedAt||w.updatedAt||w.createdAt||0
+    });
+  });
+  return list;
+}
+function trackEmpItems(){
+  var list=[];
+  Object.keys(aR).forEach(function(id){
+    var r=aR[id];if(!r)return;
+    list.push({
+      title:r.source==='common'?(r.projectName||'Common work'):(r.projectName||'Work'),
+      details:r.workDetails||'',who:r.employeeName||'Employee',code:r.employeeCode||'',
+      created:r.createdDate||'',createdTime:r.createdTime||'',completed:r.completedDate||'',completedTime:r.completedTime||'',
+      status:r.status||'pending',priority:'',note:'',
+      project:(r.source==='common'?'Common work':(r.projectCode||'Project work')),
+      sort:r.timestamp||0
+    });
+  });
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.selfTag||w.reportId)return;
+    list.push({
+      title:w.title||'Ticket',details:w.details||'',who:w.assignedName||'Not taken yet',code:w.assignedCode||'',
+      created:w.createdDate||'',createdTime:'',completed:w.completedDate||'',completedTime:w.completedTime||'',
+      status:w.status||'open',priority:w.priority||'',note:w.progressNote||'',
+      project:w.ticketType==='project'?(w.projectName||'Project'):'Free ticket',
+      sort:w.updatedAt||w.createdAt||0
+    });
+  });
+  return list;
+}
+function renTrack(){
+  var host=document.getElementById('trackList');if(!host)return;
+  document.querySelectorAll('#trackTabs .track-tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-tab')===trackTab)});
+  var adminAll=trackAdminItems(),empAll=trackEmpItems();
+  document.getElementById('trackAdC').textContent=adminAll.length;
+  document.getElementById('trackEmpC').textContent=empAll.length;
+  var source=trackTab==='emp'?empAll:adminAll;
+  var list=source.filter(function(item){
+    if(!trackInRange(item.created,item.completed))return false;
+    return trackSearch((item.title||'')+' '+(item.details||'')+' '+(item.who||'')+' '+(item.project||'')+' '+(item.note||'')+' '+(item.code||''));
+  });
+  list.sort(function(a,b){return b.sort-a.sort});
+  var label=trackTab==='emp'?'employee works':'admin works';
+  document.getElementById('trackSum').textContent='Showing '+list.length+' of '+source.length+' '+label+'.';
+  if(!list.length){
+    host.innerHTML='<div class="empty-s" style="grid-column:1/-1"><i class="fas fa-border-all"></i><p>'+(source.length?'Nothing matches that search or date.':'No '+label+' yet.')+'</p></div>';
+    return;
+  }
+  host.innerHTML=list.map(trackCard).join('');
 }
 function renHist(){
   var q=(document.getElementById('sHist').value||'').trim().toLowerCase();
