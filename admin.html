@@ -406,7 +406,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
           <input type="text" class="form-control" id="sEmp" placeholder="Search employees..." style="max-width:360px" oninput="renEmp()">
           <button class="bsc bsc-p" style="padding:.5rem 1.2rem;min-height:44px" onclick="openEmpM()"><i class="fas fa-plus"></i> Add Employee</button>
         </div>
-        <p style="color:var(--text-sec);font-size:.88rem;margin:-.25rem 0 1rem">Deleting an employee removes only the login. Their past work stays in Work History.</p>
+        <p style="color:var(--text-sec);font-size:.88rem;margin:-.25rem 0 1rem">Use the shield to change an employee into an admin. They keep the same email and password. Deleting an employee removes only the login. Past work stays in Work History.</p>
         <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>ID</th><th>Email</th><th>Mobile</th><th>Dept</th><th>Designation</th><th>Actions</th></tr></thead><tbody id="empTB"></tbody></table></div><div id="empE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees</p></div><div class="pag-w" id="empPag"></div></div>
       </div>
 
@@ -544,6 +544,15 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-md-6" id="adPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="adPwLbl">Password *</label><input type="password" class="form-control" id="adPw" autocomplete="new-password"></div>
     <div class="col-md-6" id="adPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password</label><input type="password" class="form-control" id="adPw2" autocomplete="new-password"></div>
     <div class="col-12" id="adResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetAdminPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">Another admin sets the new password from that email. Your own password can be typed above.</p></div>
+    <div class="col-12" id="adOldWrap" style="display:none">
+      <div style="border:1px solid var(--border);border-radius:12px;padding:.9rem;background:var(--bg)">
+        <strong>This email already has a login</strong>
+        <p style="color:var(--text-sec);font-size:.84rem;margin:.35rem 0 .7rem">Deleting an employee removes the profile, but the email login stays. Enter the password that employee used. The new password above becomes their admin password.</p>
+        <label class="form-label" style="font-size:.85rem;font-weight:600">Current password of this email *</label>
+        <input type="password" class="form-control" id="adOldPw" autocomplete="off">
+        <button type="button" class="bsc bsc-o" style="margin-top:.7rem;min-height:44px" onclick="resetAdminPass()">Forgot it? Send a reset email</button>
+      </div>
+    </div>
   </div></div>
   <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem;min-height:44px" onclick="saveAdmin()">Save</button></div>
 </div></div></div>
@@ -793,7 +802,7 @@ function renEmp(){
   var l=Object.entries(aE).filter(function(e){var v=e[1];return!s||(v.fullName||'').toLowerCase().includes(s)||(v.employeeId||'').toLowerCase().includes(s)||(v.department||'').toLowerCase().includes(s)||(v.email||'').toLowerCase().includes(s)});
   l.sort(function(a,b){return (a[1].fullName||'').localeCompare(b[1].fullName||'')});
   var t=l.length;l=pg(l,ePg,PS);var tb=document.getElementById('empTB'),em=document.getElementById('empE');
-  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var id=e[0],v=e[1];return '<tr><td><strong>'+escH(v.fullName||'')+'</strong></td><td><code>'+escH(v.employeeId||'')+'</code></td><td>'+escH(v.email||'')+'</td><td>'+escH(v.mobile||'')+'</td><td>'+escH(v.department||'')+'</td><td>'+escH(v.designation||'')+'</td><td><div class="ta"><button onclick="openEmpM(\''+id+'\')"><i class="fas fa-pen"></i></button><button class="bd" onclick="delEmp(\''+id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>'}).join('')}
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var id=e[0],v=e[1];return '<tr><td><strong>'+escH(v.fullName||'')+'</strong></td><td><code>'+escH(v.employeeId||'')+'</code></td><td>'+escH(v.email||'')+'</td><td>'+escH(v.mobile||'')+'</td><td>'+escH(v.department||'')+'</td><td>'+escH(v.designation||'')+'</td><td><div class="ta"><button type="button" title="Make admin" onclick="makeAdmin(\''+id+'\')"><i class="fas fa-user-shield"></i></button><button type="button" title="Edit" onclick="openEmpM(\''+id+'\')"><i class="fas fa-pen"></i></button><button type="button" class="bd" title="Delete" onclick="delEmp(\''+id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>'}).join('')}
   pgH('empPag',t,ePg,'goEP');
 }
 function goEP(p){ePg=Math.max(1,p);renEmp()}
@@ -807,6 +816,33 @@ async function createLogin(email,pass){
   var uid=cred.user.uid;
   await au.signOut();
   return uid;
+}
+async function reclaimLogin(email,oldPass,newPass){
+  var au=makerAuth();
+  var cred=await au.signInWithEmailAndPassword(email,oldPass);
+  if(newPass&&newPass!==oldPass)await cred.user.updatePassword(newPass);
+  var uid=cred.user.uid;
+  await au.signOut();
+  return uid;
+}
+function emailInUse(code){return code==='auth/email-already-in-use'}
+function badPass(code){return code==='auth/wrong-password'||code==='auth/invalid-credential'||code==='auth/invalid-login-credentials'}
+async function dropEmployeeProfile(uid){
+  if(!aE[uid])return;
+  var updates={};
+  updates['employees/'+uid]=null;
+  Object.keys(aA).forEach(function(id){if(aA[id]&&aA[id].employeeId===uid)updates['assignments/'+id]=null});
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.selfTag||w.assignedTo!==uid||w.status==='completed')return;
+    updates['commonWorks/'+id+'/assignedTo']='';
+    updates['commonWorks/'+id+'/assignedName']='';
+    updates['commonWorks/'+id+'/assignedCode']='';
+    updates['commonWorks/'+id+'/status']='open';
+    updates['commonWorks/'+id+'/takenAt']=0;
+    updates['commonWorks/'+id+'/assignedAt']=0;
+  });
+  await db.ref().update(updates);
 }
 function openEmpM(id){
   ['emN','emId','emEm','emMo','emDp','emDs','emPw','emPw2'].forEach(function(x){document.getElementById(x).value=''});
@@ -863,6 +899,28 @@ function resetEmpPass(){
   sL();
   auth.sendPasswordResetEmail(email).then(function(){hL();T('Password reset email sent','success')}).catch(function(e){hL();T(e.message,'error')});
 }
+function makeAdmin(uid){
+  var v=aE[uid];
+  if(!v)return;
+  if(aAdmins[uid]){T('This person is already an admin','error');return}
+  document.getElementById('cfmT').textContent='Change to admin?';
+  document.getElementById('cfmM').textContent=(v.fullName||'This employee')+' will sign in as an admin with the same email and password. They leave the employee list. Their past work stays in Work History.';
+  document.getElementById('cfmB').textContent='Make admin';
+  document.getElementById('cfmB').onclick=async function(){
+    sL();
+    try{
+      await db.ref('admins/'+uid).set({
+        fullName:v.fullName||'',name:v.fullName||'',role:'Administrator',email:v.email||'',mobile:v.mobile||'',
+        createdAt:Date.now(),createdBy:CU?CU.uid:'',promotedFrom:'employee',updatedAt:Date.now()
+      });
+      await dropEmployeeProfile(uid);
+      var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
+      if(modal)modal.hide();
+      hL();T('Employee is now an admin','success');
+    }catch(e){hL();T(e.message,'error')}
+  };
+  new bootstrap.Modal(document.getElementById('cfmModal')).show();
+}
 function delEmp(uid){
   var v=aE[uid]||{};
   document.getElementById('cfmT').textContent='Delete employee account?';
@@ -907,7 +965,7 @@ function renAdmins(){
 }
 function goAdP(p){adPg=Math.max(1,p);renAdmins()}
 function openAdminM(id){
-  ['adN','adR','adEm','adMo','adPw','adPw2'].forEach(function(x){document.getElementById(x).value=''});
+  ['adN','adR','adEm','adMo','adPw','adPw2','adOldPw'].forEach(function(x){document.getElementById(x).value=''});
   document.getElementById('edAdminId').value='';
   document.getElementById('adminMT').textContent='Add Admin';
   document.getElementById('adEm').readOnly=false;
@@ -915,6 +973,7 @@ function openAdminM(id){
   document.getElementById('adPwWrap').style.display='';
   document.getElementById('adPw2Wrap').style.display='';
   document.getElementById('adResetWrap').style.display='none';
+  document.getElementById('adOldWrap').style.display='none';
   if(id&&aAdmins[id]){
     var v=aAdmins[id];
     document.getElementById('edAdminId').value=id;
@@ -952,15 +1011,36 @@ async function saveAdmin(){
       if(CU&&eid===CU.uid)adminName=name;
       T('Admin updated','success');
     }else{
-      if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
-      if(pass!==pass2){hL();T('Passwords do not match','error');return}
-      var uid=await createLogin(email,pass);
+      var oldPass=document.getElementById('adOldPw').value;
+      var held=Object.entries(aE).find(function(e){return (e[1].email||'').toLowerCase()===email.toLowerCase()});
+      if(!held){
+        if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
+        if(pass!==pass2){hL();T('Passwords do not match','error');return}
+      }
+      var uid;
+      if(held)uid=held[0];
+      else if(oldPass)uid=await reclaimLogin(email,oldPass,pass);
+      else uid=await createLogin(email,pass);
       data.createdAt=Date.now();data.createdBy=CU?CU.uid:'';
       await db.ref('admins/'+uid).set(data);
-      T('Admin account created','success');
+      if(aE[uid])await dropEmployeeProfile(uid);
+      T(held||oldPass?'This login is now an admin':'Admin account created','success');
     }
     bootstrap.Modal.getInstance(document.getElementById('adminModal')).hide();hL();
-  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':e.message,'error')}
+  }catch(e){
+    hL();
+    if(emailInUse(e.code)){
+      document.getElementById('adOldWrap').style.display='';
+      T('This email still has a login. Enter its current password, then save again.','error');
+      return;
+    }
+    if(badPass(e.code)){
+      document.getElementById('adOldWrap').style.display='';
+      T('That current password is not correct. Send a reset email if you forgot it, then enter the new one here.','error');
+      return;
+    }
+    T(e.message,'error');
+  }
 }
 function resetAdminPass(){
   var email=document.getElementById('adEm').value.trim();
