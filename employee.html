@@ -192,8 +192,8 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <aside class="sidebar" id="sidebar">
 <div class="sidebar-header"><h5><i class="fas fa-bolt" style="color:var(--accent)"></i> PTDC Employee</h5><small>Profit Traders Developers Connect</small></div>
 <nav class="sidebar-nav">
-<div class="nav-item active" data-p="pg-home" onclick="nav(this,'pg-home')"><i class="fas fa-th-large"></i> Dashboard</div>
-<div class="nav-item" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
+<div class="nav-item active" data-p="pg-cmd" onclick="nav(this,'pg-cmd')"><i class="fas fa-bullhorn"></i> Common Works <span class="nav-count" id="cmdNavCount" style="display:none">0</span></div>
+<div class="nav-item" data-p="pg-home" onclick="nav(this,'pg-home')"><i class="fas fa-th-large"></i> Dashboard</div>
 <div class="nav-item" data-p="pg-work" onclick="nav(this,'pg-work')"><i class="fas fa-pen-to-square"></i> My Work</div>
 <div class="nav-item" data-p="pg-hist" onclick="nav(this,'pg-hist')"><i class="fas fa-clock-rotate-left"></i> Work History</div>
 <div style="height:1px;background:var(--border);margin:1rem 1.5rem"></div>
@@ -203,7 +203,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 </aside>
 <div class="main-content">
 <header class="topbar">
-<div class="topbar-left"><button class="hamburger" onclick="togSide()"><i class="fas fa-bars"></i></button><h4 id="pgTitle">Dashboard</h4></div>
+<div class="topbar-left"><button class="hamburger" onclick="togSide()"><i class="fas fa-bars"></i></button><h4 id="pgTitle">Common Works</h4></div>
 <div class="topbar-right">
 <button class="theme-tgl" onclick="togTheme()" title="Toggle Theme"></button>
 <div style="position:relative">
@@ -220,7 +220,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 </div>
 </header>
 <div class="content-area">
-<div id="pg-home" class="page active">
+<div id="pg-home" class="page">
 <div class="welcome-card"><h2 id="welName">Welcome!</h2><p id="welSub"></p></div>
 <div class="stat-cards">
 <div class="s-card"><div class="ib gt"><i class="fas fa-folder-open"></i></div><div class="info"><h3 id="xProj">0</h3><p>Assigned Projects</p></div></div>
@@ -241,7 +241,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <div class="proj-cards" id="myProjCards"></div>
 <div id="homeProjE" class="empty-s" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned. Contact admin.</p></div>
 </div>
-<div id="pg-cmd" class="page">
+<div id="pg-cmd" class="page active">
 <p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Free tickets that are still open show here for every employee. A project ticket shows only if you are assigned to that project.</p>
 <div class="emp-tabs" id="empCmdTabs">
 <button type="button" class="emp-tab active" data-tab="open">Open <span id="tabOpenC">0</span></button>
@@ -298,8 +298,8 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 </div>
 </div>
 <nav class="app-tab" aria-label="Employee">
-<button type="button" class="active" data-p="pg-home" onclick="nav(document.querySelector('.sidebar [data-p=pg-home]'),'pg-home')"><i class="fas fa-th-large"></i><span>Home</span></button>
-<button type="button" data-p="pg-cmd" onclick="nav(document.querySelector('.sidebar [data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-bullhorn"></i><span>Common</span></button>
+<button type="button" class="active" data-p="pg-cmd" onclick="nav(document.querySelector('.sidebar [data-p=pg-cmd]'),'pg-cmd')"><i class="fas fa-bullhorn"></i><span>Common</span></button>
+<button type="button" data-p="pg-home" onclick="nav(document.querySelector('.sidebar [data-p=pg-home]'),'pg-home')"><i class="fas fa-th-large"></i><span>Home</span></button>
 <button type="button" data-p="pg-work" onclick="nav(document.querySelector('.sidebar [data-p=pg-work]'),'pg-work')"><i class="fas fa-pen-to-square"></i><span>My Work</span></button>
 <button type="button" data-p="pg-hist" onclick="nav(document.querySelector('.sidebar [data-p=pg-hist]'),'pg-hist')"><i class="fas fa-clock-rotate-left"></i><span>History</span></button>
 <button type="button" data-p="pg-prof" onclick="nav(document.querySelector('.sidebar [data-p=pg-prof]'),'pg-prof')"><i class="fas fa-user"></i><span>Profile</span></button>
@@ -319,7 +319,7 @@ firebase.initializeApp(FC);
 var auth=firebase.auth(),db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-var CU=null,myD=null,aP={},myA={},myR={},aC={},selProj=null,myCh=null,curPage='pg-home',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false;
+var CU=null,myD=null,aP={},myA={},myR={},aC={},selProj=null,myCh=null,curPage='pg-cmd',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false;
 var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 /* === UTILS === */
@@ -370,7 +370,7 @@ function initApp(){
   document.getElementById('prAv').textContent=ini(n);
   document.getElementById('dashLayout').style.display='flex';
   bindEmpCmd();
-  loadD();renHome();
+  loadD();renEmpCmd();renHome();
 }
 function loadD(){
   db.ref('projects').on('value',function(s){aP=s.val()||{};if(curPage==='pg-home')renHome();if(curPage==='pg-work')renWorkPage()});
