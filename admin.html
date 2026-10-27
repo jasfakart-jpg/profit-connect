@@ -151,6 +151,15 @@ h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}a{text-decorat
 .cmd-meta i{margin-right:.2rem;color:var(--primary)}
 .cmd-note{margin-top:.45rem;font-size:.8rem;color:var(--text);background:var(--bg);border-radius:8px;padding:.4rem .55rem;overflow-wrap:anywhere}
 .cmd-note i{color:var(--primary);margin-right:.3rem}
+.handle-line{display:flex;gap:0;overflow-x:auto;padding:.15rem 0 .2rem;margin-top:.55rem}
+.handle-step{position:relative;flex:1 0 76px;min-width:76px;text-align:center;padding:0 .2rem}
+.handle-step:not(:last-child)::after{content:"";position:absolute;top:13px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.handle-dot{width:28px;height:28px;border-radius:50%;margin:0 auto .25rem;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--primary);font-size:.62rem;font-weight:800;position:relative;z-index:1}
+.handle-step.done .handle-dot{background:var(--success)}
+.handle-step.released .handle-dot,.handle-step.reopened .handle-dot{background:var(--text-sec)}
+.handle-step strong{display:block;font-size:.68rem;line-height:1.2;overflow-wrap:anywhere}
+.handle-step small{display:block;color:var(--text-sec);font-size:.62rem;line-height:1.2}
+.handle-count{margin-top:.35rem;font-size:.75rem;font-weight:700;color:var(--text)}
 .cmd-actions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.65rem}
 .cmd-actions .bsc{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:.35rem}
 .cmd-actions .bsc-p{flex:1}
@@ -1466,6 +1475,58 @@ function projectStaff(projectId){
   return list;
 }
 function onProjectTicket(w){return !!(w&&w.ticketType==='project'&&w.projectId)}
+function asHandlerArr(raw){
+  if(!raw)return [];
+  if(Array.isArray(raw))return raw.filter(Boolean);
+  return Object.keys(raw).sort(function(a,b){return (+a)-(+b)}).map(function(k){return raw[k]}).filter(Boolean);
+}
+function addHandle(cur,entry){
+  var arr=asHandlerArr(cur.handlers);
+  var last=arr[arr.length-1];
+  if(!(last&&last.uid===(entry.uid||'')&&last.action===entry.action))arr.push(entry);
+  cur.handlers=arr;
+  return arr;
+}
+function ticketHandlers(w){
+  var arr=asHandlerArr(w&&w.handlers);
+  if(arr.length)return arr;
+  var out=[];
+  if(w&&(w.createdBy||w.createdByName))out.push({uid:w.createdBy||'',name:w.createdByName||'Admin',role:'admin',action:'created',at:w.createdAt||0});
+  if(w&&w.assignedTo&&w.assignedName)out.push({uid:w.assignedTo,name:w.assignedName,role:w.selfTag?'admin':'employee',action:w.selfTag?'self':'assigned',at:w.assignedAt||w.takenAt||w.completedAt||0});
+  if(w&&w.status==='completed')out.push({uid:w.assignedTo||w.createdBy||'',name:w.assignedName||w.createdByName||'Completed',role:w.selfTag?'admin':'employee',action:'completed',at:w.completedAt||0});
+  return out;
+}
+function handlerMembers(list){
+  var seen={},n=0;
+  list.forEach(function(h){
+    if(!h||h.action==='created'||h.action==='released'||h.action==='reopened')return;
+    var k=h.uid||h.name;if(!k||seen[k])return;
+    seen[k]=1;n++;
+  });
+  return n;
+}
+function handleAct(a){
+  if(a==='created')return 'Created';
+  if(a==='assigned')return 'Assigned';
+  if(a==='taken')return 'Took it';
+  if(a==='self')return 'Self';
+  if(a==='released')return 'Released';
+  if(a==='reopened')return 'Reopened';
+  if(a==='completed')return 'Completed';
+  return a||'';
+}
+function handleLine(w){
+  var list=ticketHandlers(w);
+  if(!list.length)return '';
+  var n=handlerMembers(list);
+  var html='<div class="handle-line">';
+  list.forEach(function(h){
+    var cls=h.action==='completed'?'done':(h.action==='released'||h.action==='reopened')?h.action:'';
+    html+='<div class="handle-step '+cls+'"><div class="handle-dot">'+ini(h.name||'?')+'</div><strong>'+escH(h.name||'Member')+'</strong><small>'+handleAct(h.action)+'</small></div>';
+  });
+  html+='</div><div class="handle-count"><i class="fas fa-users"></i> '+(n?(n===1?'1 member handled this':n+' members handled this'):'Waiting for someone to handle this')+'</div>';
+  return html;
+}
 function cmdAudienceLabel(w){
   if(!onProjectTicket(w))return '<span><i class="fas fa-users"></i> Everyone</span>';
   var people=projectStaff(w.projectId);
@@ -1494,6 +1555,7 @@ function cmdCardHtml(id,w){
     +'<div class="cmd-grip" data-id="'+id+'" title="Drag to assign" aria-label="Drag to assign"><i class="fas fa-grip-vertical"></i></div>'
     +'<div class="cmd-card-main"><div class="cmd-card-title-row"><h6>'+escH(w.title||'Untitled')+'</h6><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span></div>'
     +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
+    +handleLine(w)
     +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span>'
     +(w.createdByName?'<span><i class="fas fa-user-shield"></i> '+escH(w.createdByName)+'</span>':'')
     +(w.assignedName?'<span><i class="fas fa-user"></i> '+escH(w.assignedName)+'</span>':cmdAudienceLabel(w))
@@ -1530,6 +1592,7 @@ function cmdSelfCardHtml(id,w){
   var who=adminLabel(w.selfAdminId||w.assignedTo);
   var grip=mine?'<div class="cmd-grip" data-id="'+id+'" title="Drag to move" aria-label="Drag to move"><i class="fas fa-grip-vertical"></i></div>':'<div class="cmd-grip" style="cursor:default" title="Another admin is doing this"><i class="fas fa-user-shield"></i></div>';
   var body='<div class="cmd-details">'+escH(w.details||'')+'</div>'
+    +handleLine(w)
     +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-user-shield"></i> '+escH(who)+' is doing this</span></div>';
   if(mine){
     body+='<label style="font-size:.78rem;font-weight:700;color:var(--text-sec)">Progress for other admins</label>'
@@ -1610,6 +1673,7 @@ function renCmd(){
     var w=item.w;
     doneHtml+='<article class="cmd-card '+cmdPrClass(w.priority)+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div>'
       +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
+      +handleLine(w)
       +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-user"></i> '+(w.selfTag?'Admin · '+escH(w.assignedName||adminLabel(w.selfAdminId)):(w.assignedName?escH(w.assignedName):'Unassigned'))+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span></div>'
       +(w.progressNote?'<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>':'')
       +'<div class="cmd-meta"><span><i class="fas fa-user-shield"></i> '+(w.createdByName?escH(w.createdByName):'Unknown admin')+'</span></div>'
@@ -1670,9 +1734,11 @@ async function saveCmd(){
     if(prev.status!=='completed')data.status='progress';
     data.assignedAt=now;
     if(!prev.takenAt)data.takenAt=now;
+    if(eid&&!prev.selfTag)data.handlers=addHandle(prev,{uid:CU.uid,name:adminName,role:'admin',action:'self',at:now});
   }else if(prev.selfTag&&selfOwner(prev)){
     data.selfTag=false;data.selfAdminId='';data.assignedTo='';data.assignedName='';data.assignedCode='';
     data.status='open';data.takenAt=0;data.assignedAt=0;
+    data.handlers=addHandle(prev,{uid:CU.uid,name:adminName,role:'admin',action:'released',at:now});
   }
   sL();
   try{
@@ -1684,6 +1750,9 @@ async function saveCmd(){
       }
       data.progressNote=data.progressNote||'';data.createdAt=now;data.createdDate=tS();
       data.createdBy=CU.uid;data.createdByName=adminName;
+      var hands=[{uid:CU.uid,name:adminName,role:'admin',action:'created',at:now}];
+      if(wantSelf)hands.push({uid:CU.uid,name:adminName,role:'admin',action:'self',at:now});
+      data.handlers=hands;
       await db.ref('commonWorks/'+gId()).set(data);
       T(wantSelf?'Tagged to you. Other admins can monitor your progress':ticketType==='project'?'Ticket created for people assigned to this project':'Ticket created for everyone','success');
     }
@@ -1745,6 +1814,7 @@ async function assignCommon(id,empUid,spin){
     status:empUid?'progress':'open',
     selfTag:false,
     selfAdminId:'',
+    handlers:addHandle(w,empUid?{uid:empUid,name:emp.fullName||'Employee',role:'employee',action:'assigned',at:Date.now()}:{uid:CU?CU.uid:'',name:adminName,role:'admin',action:'released',at:Date.now()}),
     updatedAt:Date.now(),
     assignedAt:empUid?Date.now():0,
     takenAt:0
@@ -1768,7 +1838,8 @@ async function tagSelfCmd(id){
   try{
     await db.ref('commonWorks/'+id).update({
       selfTag:true,selfAdminId:CU.uid,assignedTo:CU.uid,assignedName:adminName,assignedCode:'ADMIN',
-      status:'progress',assignedAt:Date.now(),takenAt:w.takenAt||Date.now(),updatedAt:Date.now()
+      status:'progress',assignedAt:Date.now(),takenAt:w.takenAt||Date.now(),updatedAt:Date.now(),
+      handlers:addHandle(w,{uid:CU.uid,name:adminName,role:'admin',action:'self',at:Date.now()})
     });
     hL();T('Tagged to you. Other admins can monitor your progress','success');
   }catch(e){hL();T(e.message,'error')}
@@ -1792,7 +1863,8 @@ function completeAdminCmd(id){
     sL();
     try{
       await db.ref('commonWorks/'+id).update({
-        status:'completed',progressNote:adminNoteText(id),completedAt:now.getTime(),completedDate:dateStr,completedTime:timeStr,updatedAt:now.getTime()
+        status:'completed',progressNote:adminNoteText(id),completedAt:now.getTime(),completedDate:dateStr,completedTime:timeStr,updatedAt:now.getTime(),
+        handlers:addHandle(aC[id]||{},{uid:CU.uid,name:adminName,role:'admin',action:'completed',at:now.getTime()})
       });
       var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
       if(modal)modal.hide();
@@ -1811,7 +1883,8 @@ function releaseAdminCmd(id){
     sL();
     try{
       await db.ref('commonWorks/'+id).update({
-        selfTag:false,selfAdminId:'',assignedTo:'',assignedName:'',assignedCode:'',status:'open',takenAt:0,assignedAt:0,updatedAt:Date.now()
+        selfTag:false,selfAdminId:'',assignedTo:'',assignedName:'',assignedCode:'',status:'open',takenAt:0,assignedAt:0,updatedAt:Date.now(),
+        handlers:addHandle(w,{uid:CU.uid,name:adminName,role:'admin',action:'released',at:Date.now()})
       });
       var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
       if(modal)modal.hide();
@@ -1827,7 +1900,8 @@ async function reopenCmd(id){
     await db.ref('commonWorks/'+id).update({
       status:w.assignedTo?'progress':'open',
       completedAt:0,completedDate:'',completedTime:'',
-      updatedAt:Date.now()
+      updatedAt:Date.now(),
+      handlers:addHandle(w,{uid:CU.uid,name:adminName,role:'admin',action:'reopened',at:Date.now()})
     });
     hL();T('Ticket reopened','success');
   }catch(e){hL();T(e.message,'error')}

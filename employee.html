@@ -130,6 +130,15 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 .emp-ticket .body{white-space:pre-wrap;line-height:1.6;font-size:.92rem;margin:.35rem 0 .7rem}
 .emp-ticket .meta{display:flex;flex-wrap:wrap;gap:.55rem;color:var(--text-sec);font-size:.78rem;margin-bottom:.35rem}
 .emp-ticket .meta i{margin-right:.25rem;color:var(--primary)}
+.handle-line{display:flex;gap:0;overflow-x:auto;padding:.15rem 0 .2rem;margin-top:.65rem}
+.handle-step{position:relative;flex:1 0 76px;min-width:76px;text-align:center;padding:0 .2rem}
+.handle-step:not(:last-child)::after{content:"";position:absolute;top:13px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.handle-dot{width:28px;height:28px;border-radius:50%;margin:0 auto .25rem;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--primary);font-size:.62rem;font-weight:800;position:relative;z-index:1}
+.handle-step.done .handle-dot{background:var(--success)}
+.handle-step.released .handle-dot,.handle-step.reopened .handle-dot{background:var(--text-sec)}
+.handle-step strong{display:block;font-size:.68rem;line-height:1.2;overflow-wrap:anywhere}
+.handle-step small{display:block;color:var(--text-sec);font-size:.62rem;line-height:1.2}
+.handle-count{margin-top:.35rem;font-size:.75rem;font-weight:700;color:var(--text)}
 .emp-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
 .emp-actions .bsc{min-height:44px;padding:.55rem .9rem;display:inline-flex;align-items:center;justify-content:center;gap:.35rem}
 .emp-cmd-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
@@ -242,7 +251,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <div id="homeProjE" class="empty-s" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned. Contact admin.</p></div>
 </div>
 <div id="pg-cmd" class="page active">
-<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Free tickets that are still open show here for every employee. A project ticket shows only if you are assigned to that project.</p>
+<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Free tickets that are still open show here for every employee. A project ticket shows only if you are assigned to that project. Completed shows every finished ticket, including other employees and admins.</p>
 <div class="emp-tabs" id="empCmdTabs">
 <button type="button" class="emp-tab active" data-tab="open">Open <span id="tabOpenC">0</span></button>
 <button type="button" class="emp-tab" data-tab="mine">My progress <span id="tabMineC">0</span></button>
@@ -667,14 +676,67 @@ function cmdRankSort(list){
   });
   return list;
 }
+function asHandlerArr(raw){
+  if(!raw)return [];
+  if(Array.isArray(raw))return raw.filter(Boolean);
+  return Object.keys(raw).sort(function(a,b){return (+a)-(+b)}).map(function(k){return raw[k]}).filter(Boolean);
+}
+function addHandle(cur,entry){
+  var arr=asHandlerArr(cur.handlers);
+  var last=arr[arr.length-1];
+  if(!(last&&last.uid===(entry.uid||'')&&last.action===entry.action))arr.push(entry);
+  cur.handlers=arr;
+  return arr;
+}
+function ticketHandlers(w){
+  var arr=asHandlerArr(w&&w.handlers);
+  if(arr.length)return arr;
+  var out=[];
+  if(w&&(w.createdBy||w.createdByName))out.push({uid:w.createdBy||'',name:w.createdByName||'Admin',role:'admin',action:'created',at:w.createdAt||0});
+  if(w&&w.assignedTo&&w.assignedName)out.push({uid:w.assignedTo,name:w.assignedName,role:w.selfTag?'admin':'employee',action:w.selfTag?'self':'assigned',at:w.assignedAt||w.takenAt||w.completedAt||0});
+  if(w&&w.status==='completed')out.push({uid:w.assignedTo||w.createdBy||'',name:w.assignedName||w.createdByName||'Completed',role:w.selfTag?'admin':'employee',action:'completed',at:w.completedAt||0});
+  return out;
+}
+function handlerMembers(list){
+  var seen={},n=0;
+  list.forEach(function(h){
+    if(!h||h.action==='created'||h.action==='released'||h.action==='reopened')return;
+    var k=h.uid||h.name;if(!k||seen[k])return;
+    seen[k]=1;n++;
+  });
+  return n;
+}
+function handleAct(a){
+  if(a==='created')return 'Created';
+  if(a==='assigned')return 'Assigned';
+  if(a==='taken')return 'Took it';
+  if(a==='self')return 'Self';
+  if(a==='released')return 'Released';
+  if(a==='reopened')return 'Reopened';
+  if(a==='completed')return 'Completed';
+  return a||'';
+}
+function handleLine(w){
+  var list=ticketHandlers(w);
+  if(!list.length)return '';
+  var n=handlerMembers(list);
+  var html='<div class="handle-line">';
+  list.forEach(function(h){
+    var cls=h.action==='completed'?'done':(h.action==='released'||h.action==='reopened')?h.action:'';
+    html+='<div class="handle-step '+cls+'"><div class="handle-dot">'+ini(h.name||'?')+'</div><strong>'+escH(h.name||'Member')+'</strong><small>'+handleAct(h.action)+'</small></div>';
+  });
+  html+='</div><div class="handle-count"><i class="fas fa-users"></i> '+(n?(n===1?'1 member handled this':n+' members handled this'):'Waiting for someone to handle this')+'</div>';
+  return html;
+}
 function splitCmd(){
   var open=[],mine=[],done=[];
   Object.keys(aC).forEach(function(id){
-    var w=aC[id];if(!w||!empCanSeeCmd(w))return;
+    var w=aC[id];if(!w)return;
     var item={id:id,w:w};
-    if(w.status==='completed'&&w.assignedTo===CU.uid)done.push(item);
-    else if(w.assignedTo===CU.uid)mine.push(item);
-    else if(!w.assignedTo&&w.status!=='completed')open.push(item);
+    if(w.status==='completed'){done.push(item);return}
+    if(!empCanSeeCmd(w))return;
+    if(w.assignedTo===CU.uid)mine.push(item);
+    else if(!w.assignedTo)open.push(item);
   });
   return {open:cmdRankSort(open),mine:cmdRankSort(mine),done:done.sort(function(a,b){return (b.w.completedAt||0)-(a.w.completedAt||0)})};
 }
@@ -710,7 +772,7 @@ function renEmpCmd(){
   var host=document.getElementById('empCmdList');
   if(!list.length){
     var q=empCmdQuery();
-    var empty=q?'No tickets match that search.':empCmdTab==='mine'?'Nothing on your progress list yet. Take an open ticket, or wait for admin to assign one.':empCmdTab==='done'?'No completed common works yet.':'No open tickets. When admin creates work and leaves it unassigned, it shows here for everyone.';
+    var empty=q?'No tickets match that search.':empCmdTab==='mine'?'Nothing on your progress list yet. Take an open ticket, or wait for admin to assign one.':empCmdTab==='done'?'No completed tickets yet. Finished tickets from every employee and every admin show here.':'No open tickets. When admin creates work and leaves it unassigned, it shows here for everyone.';
     host.innerHTML='<div class="empty-s" style="grid-column:1/-1"><i class="fas fa-bullhorn"></i><p>'+empty+'</p></div>';
     return;
   }
@@ -726,6 +788,7 @@ function empTicketHtml(id,w,mode,full){
   var link=(w.ticketType==='project'&&(w.projectName||w.projectCode))?'<span><i class="fas fa-folder"></i> '+escH(w.projectName||'Project')+(w.projectCode?' · '+escH(w.projectCode):'')+'</span>':'<span><i class="fas fa-ticket"></i> Free ticket</span>';
   var html='<article class="emp-ticket '+prc+'"><div class="meta"><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span>'+link+'<span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span><span><i class="fas fa-user-shield"></i> '+escH(w.createdByName||'Admin')+'</span></div>';
   html+='<h6>'+escH(w.title||'Untitled')+'</h6>';
+  html+=handleLine(w);
   if(full)html+='<div class="body">'+escH(w.details||'')+'</div>';
   else html+='<div class="body" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">'+escH(w.details||'')+'</div>';
   if(mode==='open'){
@@ -762,6 +825,7 @@ function takeCommon(id,goMine){
     cur.status='progress';
     cur.takenAt=now;
     cur.updatedAt=now;
+    addHandle(cur,{uid:CU.uid,name:myD.fullName||'',role:'employee',action:'taken',at:now});
     return cur;
   }).then(function(res){
     hL();
@@ -816,6 +880,7 @@ function completeCommon(id){
       cur.completedDate=dateStr;
       cur.completedTime=timeStr;
       cur.updatedAt=Date.now();
+      addHandle(cur,{uid:CU.uid,name:myD.fullName||cur.assignedName||'',role:'employee',action:'completed',at:cur.completedAt});
       return cur;
     }).then(function(res){
       var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
@@ -851,6 +916,7 @@ function releaseCommon(id){
       cur.assignedAt=0;
       cur.progressNote='';
       cur.updatedAt=Date.now();
+      addHandle(cur,{uid:CU.uid,name:myD.fullName||'',role:'employee',action:'released',at:cur.updatedAt});
       return cur;
     }).then(function(res){
       var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
