@@ -524,7 +524,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
         <div id="cmdBoardWrap"><div class="cmd-board" id="cmdBoard"></div></div>
         <div id="cmdDoneWrap" style="display:none">
           <h6 class="cmd-section-h"><i class="fas fa-check-double" style="color:var(--success)"></i> Completed</h6>
-          <div class="cmd-done-grid" id="cmdDoneList"></div>
+          <div class="cmd-board" id="cmdDoneList"></div>
         </div>
       </div>
 
@@ -1660,26 +1660,78 @@ function renCmd(){
   empEntries().forEach(function(entry){jhtml+='<option value="'+entry[0]+'">'+escH(entry[1].fullName||'Employee')+'</option>'});
   jump.innerHTML=jhtml;
   if(Array.prototype.some.call(jump.options,function(o){return o.value===jv}))jump.value=jv;
-  var done=[];
-  Object.keys(aC).forEach(function(id){var w=aC[id];if(w&&w.status==='completed'&&cmdMatch(w,q))done.push({id:id,w:w})});
-  done.sort(function(a,b){return (b.w.completedAt||b.w.updatedAt||0)-(a.w.completedAt||a.w.updatedAt||0)});
   document.getElementById('cmdDoneLabel').textContent='Show completed ('+Object.values(aC).filter(function(w){return w&&w.status==='completed'}).length+')';
   var show=document.getElementById('cmdShowDone').checked;
-  var wrap=document.getElementById('cmdDoneWrap');
-  wrap.style.display=show?'block':'none';
-  var doneHtml='';
-  if(!done.length)doneHtml='<div class="cmd-empty">No completed tickets</div>';
-  done.forEach(function(item){
-    var w=item.w;
-    doneHtml+='<article class="cmd-card '+cmdPrClass(w.priority)+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div>'
-      +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
-      +handleLine(w)
-      +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-user"></i> '+(w.selfTag?'Admin · '+escH(w.assignedName||adminLabel(w.selfAdminId)):(w.assignedName?escH(w.assignedName):'Unassigned'))+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span></div>'
-      +(w.progressNote?'<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>':'')
-      +'<div class="cmd-meta"><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+(w.createdByRole==='employee'?'Employee':'Admin')+' · '+escH(w.createdByName||'Unknown')+'</span></div>'
-      +'<div class="cmd-actions"><button type="button" class="bsc bsc-p" data-act="reopen" data-id="'+item.id+'">Reopen</button>'+cmdDelBtn(item.id,w)+'</div></article>';
+  document.getElementById('cmdDoneWrap').style.display=show?'block':'none';
+  renCmdDone(q);
+}
+function cmdDoneCard(id,w){
+  return '<article class="cmd-card '+cmdPrClass(w.priority)+'" data-id="'+id+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div>'
+    +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
+    +handleLine(w)
+    +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span></div>'
+    +(w.progressNote?'<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>':'')
+    +'<div class="cmd-meta"><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+(w.createdByRole==='employee'?'Employee':'Admin')+' · '+escH(w.createdByName||'Unknown')+'</span></div>'
+    +'<div class="cmd-actions"><button type="button" class="bsc bsc-p" data-act="reopen" data-id="'+id+'">Reopen</button>'+cmdDelBtn(id,w)+'</div></article>';
+}
+function cmdDoneOf(kind,uid,q){
+  var list=[];
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status!=='completed'||!cmdMatch(w,q))return;
+    var assigned=w.assignedTo||'';
+    if(kind==='pool'){if(w.selfTag||assigned)return}
+    else if(kind==='admin'){if(!w.selfTag||(w.selfAdminId||assigned)!==uid)return}
+    else if(kind==='emp'){if(w.selfTag||assigned!==uid)return}
+    list.push({id:id,w:w});
   });
-  document.getElementById('cmdDoneList').innerHTML=doneHtml;
+  list.sort(function(a,b){return (b.w.completedAt||b.w.updatedAt||0)-(a.w.completedAt||a.w.updatedAt||0)});
+  return list;
+}
+function renCmdDone(q){
+  var board=document.getElementById('cmdDoneList');if(!board)return;
+  var sl=board.scrollLeft||0;
+  function col(title,sub,icon,items){
+    var html='<section class="cmd-col"><div class="cmd-col-h">'+icon+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
+    if(!items.length)html+='<div class="cmd-empty">No completed tickets</div>';
+    items.forEach(function(item){html+=cmdDoneCard(item.id,item.w)});
+    return html+'</div></section>';
+  }
+  var html='';
+  var seenAdmin={},seenEmp={};
+  var admins=[];
+  if(CU)admins.push({uid:CU.uid,name:adminLabel(CU.uid),mine:true});
+  Object.keys(aAdmins).forEach(function(uid){
+    if(seenAdmin[uid]||(CU&&uid===CU.uid))return;
+    seenAdmin[uid]=1;
+    admins.push({uid:uid,name:adminLabel(uid),mine:false});
+  });
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status!=='completed'||!w.selfTag)return;
+    var uid=w.selfAdminId||w.assignedTo||'';
+    if(!uid||seenAdmin[uid]||(CU&&uid===CU.uid))return;
+    seenAdmin[uid]=1;
+    admins.push({uid:uid,name:w.assignedName||'Admin',mine:false});
+  });
+  admins.forEach(function(person){
+    html+=col(person.mine?'My work':person.name,person.mine?'Your completed tickets':'Admin · completed','<div class="cmd-av">'+ini(person.name)+'</div>',cmdDoneOf('admin',person.uid,q));
+  });
+  var emps=empEntries().map(function(entry){seenEmp[entry[0]]=1;return {uid:entry[0],name:entry[1].fullName||'Employee',code:entry[1].employeeId||''}});
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status!=='completed'||w.selfTag||!w.assignedTo||seenEmp[w.assignedTo])return;
+    seenEmp[w.assignedTo]=1;
+    emps.push({uid:w.assignedTo,name:w.assignedName||'Employee',code:w.assignedCode||''});
+  });
+  emps.forEach(function(person){
+    html+=col(person.name,person.code||'Employee','<div class="cmd-av">'+ini(person.name)+'</div>',cmdDoneOf('emp',person.uid,q));
+  });
+  var loose=cmdDoneOf('pool','',q);
+  if(loose.length)html=col('No one assigned','Completed without a person','<div class="cmd-pool-ic"><i class="fas fa-users"></i></div>',loose)+html;
+  if(!html)html='<div class="cmd-empty">No completed tickets</div>';
+  board.innerHTML=html;
+  board.scrollLeft=sl;
 }
 function jumpCmdCol(key){
   var col=key==='self'&&CU?document.querySelector('#cmdBoard .cmd-col[data-self="'+CU.uid+'"]'):document.querySelector('#cmdBoard .cmd-col[data-emp="'+(key==='pool'?'':key)+'"]');

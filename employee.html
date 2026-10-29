@@ -310,7 +310,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 <div id="empBoardWrap"><div class="cmd-board" id="empBoard"></div></div>
 <div id="empDoneWrap">
 <h6 class="cmd-section-h"><i class="fas fa-check-double" style="color:var(--success)"></i> Completed</h6>
-<div class="cmd-done-grid" id="empDoneList"></div>
+<div class="cmd-board" id="empDoneList"></div>
 </div>
 </div>
 <div id="pg-work" class="page">
@@ -989,19 +989,68 @@ function renEmpCmd(){
   adminPeople().forEach(function(person){jhtml+='<option value="admin:'+person.uid+'">Admin · '+escH(person.name)+'</option>'});
   jump.innerHTML=jhtml;
   if(Array.prototype.some.call(jump.options,function(o){return o.value===jv}))jump.value=jv;
-  var done=[];
-  Object.keys(aC).forEach(function(id){var w=aC[id];if(w&&w.status==='completed'&&cmdSearchMatch(w))done.push({id:id,w:w})});
-  done.sort(function(a,b){return (b.w.completedAt||0)-(a.w.completedAt||0)});
   document.getElementById('empDoneLabel').textContent='Show completed ('+Object.keys(aC).filter(function(id){return aC[id]&&aC[id].status==='completed'}).length+')';
   var show=document.getElementById('empShowDone').checked;
   document.getElementById('empDoneWrap').style.display=show?'block':'none';
-  var doneHtml=done.length?'': '<div class="cmd-empty">No completed tickets yet</div>';
-  done.forEach(function(item){
-    var w=item.w;
-    var who=w.selfTag?'Admin · '+(w.assignedName||'Admin'):(w.assignedName||'Unassigned');
-    doneHtml+='<article class="cmd-card '+cmdPrClass(w.priority)+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div><div class="cmd-details">'+escH(w.details||'')+'</div>'+handleLine(w)+'<div class="cmd-meta"><span><i class="fas fa-user"></i> '+escH(who)+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+escH(w.createdByName||'Unknown')+'</span></div>'+(empOwnsTicket(w)?'<div class="cmd-actions"><button type="button" class="bsc bsc-o" data-act="del" data-id="'+item.id+'"><i class="fas fa-trash"></i> Delete</button></div>':'')+'</article>';
+  renEmpDone();
+}
+function empDoneCard(id,w){
+  var who=w.createdByRole==='employee'?'Employee':'Admin';
+  return '<article class="cmd-card '+cmdPrClass(w.priority)+'" data-id="'+id+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div><div class="cmd-details">'+escH(w.details||'')+'</div>'+handleLine(w)+'<div class="cmd-meta"><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+who+' · '+escH(w.createdByName||'Unknown')+'</span></div>'+(w.progressNote?'<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>':'')+(empOwnsTicket(w)?'<div class="cmd-actions"><button type="button" class="bsc bsc-o" data-act="del" data-id="'+id+'"><i class="fas fa-trash"></i> Delete</button></div>':'')+'</article>';
+}
+function empDoneOf(kind,uid){
+  var list=[];
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status!=='completed'||!cmdSearchMatch(w))return;
+    var assigned=w.assignedTo||'';
+    if(kind==='pool'){if(w.selfTag||assigned)return}
+    else if(kind==='emp'){if(w.selfTag||assigned!==uid)return}
+    else if(kind==='admin'){if(!w.selfTag||(w.selfAdminId||assigned)!==uid)return}
+    list.push({id:id,w:w});
   });
-  document.getElementById('empDoneList').innerHTML=doneHtml;
+  list.sort(function(a,b){return (b.w.completedAt||0)-(a.w.completedAt||0)});
+  return list;
+}
+function renEmpDone(){
+  var board=document.getElementById('empDoneList');if(!board)return;
+  var sl=board.scrollLeft||0;
+  function col(title,sub,icon,items){
+    var html='<section class="cmd-col"><div class="cmd-col-h">'+icon+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
+    if(!items.length)html+='<div class="cmd-empty">No completed tickets</div>';
+    items.forEach(function(item){html+=empDoneCard(item.id,item.w)});
+    return html+'</div></section>';
+  }
+  var html='';
+  var seen={};
+  empPeople().forEach(function(person){
+    seen[person.uid]=1;
+    var mine=person.uid===CU.uid;
+    html+=col(mine?'My work':person.name,mine?'Your completed tickets':(person.code||'Employee'),'<div class="cmd-av">'+ini(person.name)+'</div>',empDoneOf('emp',person.uid));
+  });
+  var seenAdmin={};
+  adminPeople().forEach(function(person){
+    seenAdmin[person.uid]=1;
+    html+=col(person.name,'Admin · completed','<div class="cmd-av">'+ini(person.name)+'</div>',empDoneOf('admin',person.uid));
+  });
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status!=='completed')return;
+    if(w.selfTag){
+      var aid=w.selfAdminId||w.assignedTo||'';
+      if(!aid||seenAdmin[aid])return;
+      seenAdmin[aid]=1;
+      html+=col(w.assignedName||'Admin','Admin · completed','<div class="cmd-av">'+ini(w.assignedName||'Admin')+'</div>',empDoneOf('admin',aid));
+    }else if(w.assignedTo&&!seen[w.assignedTo]){
+      seen[w.assignedTo]=1;
+      html+=col(w.assignedName||'Employee',w.assignedCode||'Employee','<div class="cmd-av">'+ini(w.assignedName||'Employee')+'</div>',empDoneOf('emp',w.assignedTo));
+    }
+  });
+  var loose=empDoneOf('pool','');
+  if(loose.length)html=col('No one assigned','Completed without a person','<div class="cmd-pool-ic"><i class="fas fa-users"></i></div>',loose)+html;
+  if(!html)html='<div class="cmd-empty">No completed tickets yet</div>';
+  board.innerHTML=html;
+  board.scrollLeft=sl;
 }
 function jumpEmpCol(key){
   var col=null;
