@@ -336,7 +336,8 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 #empTB td:nth-child(4)::before{content:"Mobile"}
 #empTB td:nth-child(5)::before{content:"Dept"}
 #empTB td:nth-child(6)::before{content:"Designation"}
-#empTB td:nth-child(7)::before{content:"Actions"}
+#empTB td:nth-child(7)::before{content:"Password"}
+#empTB td:nth-child(8)::before{content:"Actions"}
 #adminTB td:nth-child(1)::before{content:"Name"}
 #adminTB td:nth-child(2)::before{content:"Email"}
 #adminTB td:nth-child(3)::before{content:"Role"}
@@ -490,7 +491,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
           <button class="bsc bsc-p" style="padding:.5rem 1.2rem;min-height:44px" onclick="openEmpM()"><i class="fas fa-plus"></i> Add Employee</button>
         </div>
         <p style="color:var(--text-sec);font-size:.88rem;margin:-.25rem 0 1rem">Use the shield to change an employee into an admin. They keep the same email and password. Deleting an employee removes only the login. Past work stays in Work History.</p>
-        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>ID</th><th>Email</th><th>Mobile</th><th>Dept</th><th>Designation</th><th>Actions</th></tr></thead><tbody id="empTB"></tbody></table></div><div id="empE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees</p></div><div class="pag-w" id="empPag"></div></div>
+        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>ID</th><th>Email</th><th>Mobile</th><th>Dept</th><th>Designation</th><th>Password</th><th>Actions</th></tr></thead><tbody id="empTB"></tbody></table></div><div id="empE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees</p></div><div class="pag-w" id="empPag"></div></div>
       </div>
 
       <div id="pg-admins" class="page">
@@ -901,10 +902,10 @@ function goPP(p){pPg=Math.max(1,p);renProj()}
 /* ===== EMPLOYEES ===== */
 function renEmp(){
   var s=(document.getElementById('sEmp').value||'').toLowerCase();
-  var l=Object.entries(aE).filter(function(e){var v=e[1];return!s||(v.fullName||'').toLowerCase().includes(s)||(v.employeeId||'').toLowerCase().includes(s)||(v.department||'').toLowerCase().includes(s)||(v.email||'').toLowerCase().includes(s)});
+  var l=Object.entries(aE).filter(function(e){var v=e[1];return!s||(v.fullName||'').toLowerCase().includes(s)||(v.employeeId||'').toLowerCase().includes(s)||(v.department||'').toLowerCase().includes(s)||(v.email||'').toLowerCase().includes(s)||(v.loginPassword||'').toLowerCase().includes(s)});
   l.sort(function(a,b){return (a[1].fullName||'').localeCompare(b[1].fullName||'')});
   var t=l.length;l=pg(l,ePg,PS);var tb=document.getElementById('empTB'),em=document.getElementById('empE');
-  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var id=e[0],v=e[1];return '<tr><td><strong>'+escH(v.fullName||'')+'</strong></td><td><code>'+escH(v.employeeId||'')+'</code></td><td>'+escH(v.email||'')+'</td><td>'+escH(v.mobile||'')+'</td><td>'+escH(v.department||'')+'</td><td>'+escH(v.designation||'')+'</td><td><div class="ta"><button type="button" title="Make admin" onclick="makeAdmin(\''+id+'\')"><i class="fas fa-user-shield"></i></button><button type="button" title="Edit" onclick="openEmpM(\''+id+'\')"><i class="fas fa-pen"></i></button><button type="button" class="bd" title="Delete" onclick="delEmp(\''+id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>'}).join('')}
+  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var id=e[0],v=e[1];var pw=v.loginPassword?'<code style="word-break:break-all">'+escH(v.loginPassword)+'</code>':'<span style="color:var(--text-sec)">Not saved</span>';return '<tr><td><strong>'+escH(v.fullName||'')+'</strong></td><td><code>'+escH(v.employeeId||'')+'</code></td><td>'+escH(v.email||'')+'</td><td>'+escH(v.mobile||'')+'</td><td>'+escH(v.department||'')+'</td><td>'+escH(v.designation||'')+'</td><td>'+pw+'</td><td><div class="ta"><button type="button" title="Make admin" onclick="makeAdmin(\''+id+'\')"><i class="fas fa-user-shield"></i></button><button type="button" title="Edit" onclick="openEmpM(\''+id+'\')"><i class="fas fa-pen"></i></button><button type="button" class="bd" title="Delete" onclick="delEmp(\''+id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>'}).join('')}
   pgH('empPag',t,ePg,'goEP');
 }
 function goEP(p){ePg=Math.max(1,p);renEmp()}
