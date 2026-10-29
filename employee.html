@@ -150,6 +150,41 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 .emp-cmd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin-bottom:.9rem}
 .emp-cmd-head .cmd-hint{margin:0;flex:1 1 240px}
 .emp-cmd-head .bsc{min-height:44px;display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1rem}
+.cmd-tools{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem}
+.cmd-tools .form-control,.cmd-tools .form-select{max-width:280px;min-height:44px}
+.cmd-check{display:inline-flex;align-items:center;gap:.45rem;font-size:.86rem;font-weight:600;color:var(--text-sec);min-height:44px}
+#empBoardWrap{min-width:0;max-width:100%}
+.cmd-board{display:flex;gap:.75rem;width:100%;max-width:100%;min-width:0;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;padding:0 .15rem .75rem;align-items:stretch}
+.cmd-col{flex:0 0 300px;scroll-snap-align:start;background:var(--bg);border:1px solid var(--border);border-radius:16px;max-height:min(74vh,720px);display:flex;flex-direction:column;min-width:0}
+.cmd-col.drag-over{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.2);background:rgba(13,148,136,.05)}
+.cmd-col-h{display:flex;align-items:center;gap:.65rem;padding:.85rem .9rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card);border-radius:16px 16px 0 0;z-index:1}
+.cmd-col-h-t{font-weight:800;font-size:.92rem;line-height:1.25}
+.cmd-col-sub{color:var(--text-sec);font-size:.75rem}
+.cmd-count{margin-left:auto;background:rgba(13,148,136,.12);color:var(--primary);border-radius:999px;min-width:26px;height:26px;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;flex-shrink:0}
+.cmd-av{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;flex-shrink:0}
+.cmd-pool-ic{width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,.18);color:#B45309;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cmd-col-b{overflow-y:auto;padding:.75rem;flex:1;min-height:140px}
+.cmd-empty{border:1.5px dashed var(--border);border-radius:12px;color:var(--text-sec);text-align:center;padding:1.25rem .75rem;font-size:.84rem}
+.cmd-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:.75rem;margin-bottom:.65rem;box-shadow:var(--shadow)}
+.cmd-card.urgent{border-left:4px solid var(--danger)}
+.cmd-card.high{border-left:4px solid var(--accent)}
+.cmd-card.normal{border-left:4px solid var(--primary)}
+.cmd-card.cmd-dragging{opacity:.35}
+.cmd-card-top{display:flex;gap:.35rem;align-items:flex-start}
+.cmd-grip{width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--text-sec);touch-action:none;flex-shrink:0;border-radius:10px}
+.cmd-card-main{flex:1;min-width:0}
+.cmd-card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:.4rem}
+.cmd-card-title-row h6{margin:0;font-size:.95rem;line-height:1.35;overflow-wrap:anywhere}
+.cmd-details{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text-sec);font-size:.84rem;line-height:1.45;margin:.35rem 0 .5rem}
+.cmd-meta{display:flex;flex-wrap:wrap;gap:.55rem;color:var(--text-sec);font-size:.75rem}
+.cmd-meta i{margin-right:.2rem;color:var(--primary)}
+.cmd-note{margin-top:.45rem;font-size:.8rem;color:var(--text);background:var(--bg);border-radius:8px;padding:.4rem .55rem;overflow-wrap:anywhere}
+.cmd-actions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.65rem}
+.cmd-actions .bsc{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:.35rem}
+.cmd-ghost{position:fixed;z-index:10050;pointer-events:none;margin:0;box-shadow:0 16px 40px rgba(0,0,0,.22)}
+body.cmd-dragging-body{user-select:none;cursor:grabbing}
+.cmd-done-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem}
+.cmd-section-h{font-weight:800;margin:1.25rem 0 .75rem}
 .cmd-type-pick{display:flex;flex-direction:column;gap:.5rem}
 .cmd-type{display:flex;align-items:flex-start;gap:.7rem;border:1px solid var(--border);border-radius:12px;padding:.8rem .9rem;cursor:pointer;background:var(--bg);margin:0}
 .cmd-type:has(input:checked){border-color:var(--primary);background:rgba(13,148,136,.08)}
@@ -195,6 +230,9 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 .chart-card{padding:1rem}
 .pf-fields{grid-template-columns:1fr}
 .emp-cmd-list{grid-template-columns:1fr}
+.cmd-col{flex-basis:88vw;max-height:none}
+.cmd-col-b{max-height:68vh}
+.cmd-tools .form-control,.cmd-tools .form-select{max-width:none;flex:1 1 100%}
 }
 @media(max-width:420px){
 .stat-cards{grid-template-columns:1fr 1fr}
@@ -261,16 +299,19 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 </div>
 <div id="pg-cmd" class="page active">
 <div class="emp-cmd-head">
-<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5">Create a ticket here and it shows for every employee and every admin. A project ticket shows only to people on that project. Completed shows every finished ticket.</p>
+<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5">Every employee and every admin is listed here with the tickets they are handling. You can drag only a ticket you created, onto another employee or an admin. Completed tickets stay visible so you can see the work.</p>
 <button type="button" class="bsc bsc-p" onclick="openEmpCmdM()"><i class="fas fa-plus"></i> New ticket</button>
 </div>
-<div class="emp-tabs" id="empCmdTabs">
-<button type="button" class="emp-tab active" data-tab="open">Open <span id="tabOpenC">0</span></button>
-<button type="button" class="emp-tab" data-tab="mine">My progress <span id="tabMineC">0</span></button>
-<button type="button" class="emp-tab" data-tab="done">Completed <span id="tabDoneC">0</span></button>
+<div class="cmd-tools">
+<input type="search" class="form-control" id="empCmdSearch" name="ptdc-ticket-search" placeholder="Search tickets..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeydown="empCmdQueryTouched=true" onpaste="empCmdQueryTouched=true" oninput="renEmpCmd()">
+<select class="form-select" id="empCmdJump" onchange="jumpEmpCol(this.value)"><option value="pool">Open for everyone</option></select>
+<label class="cmd-check"><input type="checkbox" id="empShowDone" checked onchange="renEmpCmd()"> <span id="empDoneLabel">Show completed (0)</span></label>
 </div>
-<input type="search" class="form-control" id="empCmdSearch" name="ptdc-ticket-search" placeholder="Search tickets..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeydown="empCmdQueryTouched=true" onpaste="empCmdQueryTouched=true" oninput="renEmpCmd()" style="max-width:360px;margin-bottom:1rem;min-height:44px">
-<div class="emp-cmd-list" id="empCmdList"></div>
+<div id="empBoardWrap"><div class="cmd-board" id="empBoard"></div></div>
+<div id="empDoneWrap">
+<h6 class="cmd-section-h"><i class="fas fa-check-double" style="color:var(--success)"></i> Completed</h6>
+<div class="cmd-done-grid" id="empDoneList"></div>
+</div>
 </div>
 <div id="pg-work" class="page">
 <div id="workList">
@@ -279,7 +320,7 @@ textarea.form-control{min-height:200px;resize:vertical;line-height:1.7}
 <div id="workProjE" class="empty-s" style="display:none"><i class="fas fa-folder-open"></i><p>No projects assigned.</p></div>
 <div id="myCommonWorks" style="margin-top:1.75rem">
 <h5 style="font-weight:700;margin-bottom:.35rem"><i class="fas fa-bullhorn" style="color:var(--accent)"></i> Common works</h5>
-<p style="color:var(--text-sec);font-size:.88rem;margin-bottom:.75rem">Finished common tickets are saved here for this employee, and they also appear in Work History.</p>
+<p style="color:var(--text-sec);font-size:.88rem;margin-bottom:.75rem">Tickets you create stay here and in Work History, including ones still open. Finished common tickets are saved here too.</p>
 <div class="emp-cmd-list" id="myCommonList"></div>
 </div>
 </div>
@@ -358,7 +399,7 @@ firebase.initializeApp(FC);
 var auth=firebase.auth(),db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-var CU=null,myD=null,aP={},myA={},myR={},aC={},selProj=null,myCh=null,curPage='pg-cmd',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false;
+var CU=null,myD=null,aP={},myA={},allA={},aE={},aAdmins={},myR={},aC={},selProj=null,myCh=null,curPage='pg-cmd',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false,empDragState=null,empSuppressClick=false,empRenderPending=false;
 var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 /* === UTILS === */
@@ -413,9 +454,11 @@ function initApp(){
 }
 function loadD(){
   db.ref('projects').on('value',function(s){aP=s.val()||{};if(curPage==='pg-home')renHome();if(curPage==='pg-work')renWorkPage()});
+  db.ref('employees').on('value',function(s){aE=s.val()||{};if(curPage==='pg-cmd')renEmpCmd()});
+  db.ref('admins').on('value',function(s){aAdmins=s.val()||{};if(curPage==='pg-cmd')renEmpCmd()});
   db.ref('assignments').on('value',function(s){
-    var all=s.val()||{};myA={};
-    Object.keys(all).forEach(function(id){if(all[id].employeeId===CU.uid)myA[id]=all[id]});
+    allA=s.val()||{};myA={};
+    Object.keys(allA).forEach(function(id){if(allA[id].employeeId===CU.uid)myA[id]=allA[id]});
     updEmpCmdBadge();
     if(curPage==='pg-home')renHome();if(curPage==='pg-work')renWorkPage();if(curPage==='pg-hist')loadHist();if(curPage==='pg-cmd')renEmpCmd();
   });
@@ -428,6 +471,8 @@ function loadD(){
     aC=s.val()||{};updEmpCmdBadge();
     if(curPage==='pg-home')renHome();
     if(curPage==='pg-cmd')renEmpCmd();
+    if(curPage==='pg-hist')loadHist();
+    if(curPage==='pg-work')renMyCommon();
   },function(err){if(!cmdErrShown){cmdErrShown=true;T(err.message,'error')}});
 }
 
@@ -491,17 +536,33 @@ function goWork(pid,name,client){
 function renWorkPage(){renProjCards('workProjCards');document.getElementById('workList').style.display='block';document.getElementById('workForm').style.display='none';selProj=null;renMyCommon()}
 function renMyCommon(){
   var host=document.getElementById('myCommonList');if(!host)return;
+  var reported={};
+  Object.values(myR).forEach(function(r){if(r&&r.commonWorkId)reported[r.commonWorkId]=true});
+  var live=[];
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.createdBy!==CU.uid||reported[id])return;
+    live.push({id:id,w:w});
+  });
+  live.sort(function(a,b){return (b.w.createdAt||0)-(a.w.createdAt||0)});
   var list=[];
   Object.keys(myR).forEach(function(id){
     var r=myR[id];
     if(r&&(r.source==='common'||r.projectCode==='COMMON'))list.push({id:id,r:r});
   });
   list.sort(function(a,b){return (b.r.timestamp||0)-(a.r.timestamp||0)});
-  if(!list.length){host.innerHTML='<div class="empty-s" style="padding:1.5rem 1rem"><i class="fas fa-bullhorn"></i><p>No finished common tickets yet. Complete one from Common Works and it will be stored here.</p></div>';return}
-  host.innerHTML=list.map(function(item){
+  if(!live.length&&!list.length){host.innerHTML='<div class="empty-s" style="padding:1.5rem 1rem"><i class="fas fa-bullhorn"></i><p>No tickets you created yet. Create one in Common Works and it will show here and in Work History.</p></div>';return}
+  var html=live.map(function(item){
+    var w=item.w;
+    var label=w.status==='completed'?'Completed':w.status==='progress'?'In progress':'Open';
+    var cls=w.status==='completed'?'bs-done':'bs-pending';
+    return '<article class="emp-ticket normal"><div class="meta"><span class="bs '+cls+'">'+label+'</span><span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span><span><i class="fas fa-user"></i> '+(w.assignedName?escH(w.assignedName):'Open for everyone')+'</span></div><h6>'+escH(w.title||'Common work')+'</h6><div class="body">'+escH(w.details||'')+'</div></article>';
+  }).join('');
+  html+=list.map(function(item){
     var r=item.r;
     return '<article class="emp-ticket normal"><div class="meta"><span class="bs bs-done">Completed</span><span><i class="fas fa-calendar"></i> '+fD(r.completedDate||r.createdDate)+' '+(r.completedTime||r.createdTime||'')+'</span></div><h6>'+escH(r.projectName||'Common work')+'</h6><div class="body">'+escH(r.workDetails||'')+'</div></article>';
   }).join('');
+  host.innerHTML=html;
 }
 function openWork(pid,name,client){
   selProj=pid;
@@ -546,7 +607,9 @@ async function submitWork(status){
 /* === HISTORY === */
 function loadHistPage(){
   var ys=document.getElementById('hYear');ys.innerHTML='<option value="">All</option>';
-  var yrs={};Object.values(myR).forEach(function(r){if(r.year)yrs[r.year]=true});yrs[cY()]=true;
+  var yrs={};Object.values(myR).forEach(function(r){if(r.year)yrs[r.year]=true});
+  Object.keys(aC).forEach(function(id){var w=aC[id];if(w&&w.createdBy===CU.uid&&w.createdDate)yrs[String(w.createdDate).slice(0,4)]=true});
+  yrs[cY()]=true;
   Object.keys(yrs).sort().reverse().forEach(function(y){ys.innerHTML+='<option value="'+y+'">'+y+'</option>'});
   var ps=document.getElementById('hProj');ps.innerHTML='<option value="">All Projects</option><option value="common">Common Works</option>';
   Object.values(myA).forEach(function(a){var p=aP[a.projectId]||{};ps.innerHTML+='<option value="'+a.projectId+'">'+escH(p.name||a.projectName)+'</option>'});
@@ -568,6 +631,30 @@ function loadHist(){
     if(fp&&fp!=='common'&&r.projectId!==fp)return;
     if(fs&&r.status!==fs)return;
     filtered.push({id:id,data:r});
+  });
+  var reported={};
+  Object.values(myR).forEach(function(r){if(r&&r.commonWorkId)reported[r.commonWorkId]=true});
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.createdBy!==CU.uid||reported[id])return;
+    var date=w.createdDate||'';
+    var parts=date.split('-');
+    var row={
+      projectId:(w.ticketType==='project'&&w.projectId)?w.projectId:'common',
+      projectName:(w.ticketType==='project'&&w.projectId)?(w.projectName||'Project'):(w.title||'Common Work'),
+      projectCode:(w.ticketType==='project'&&w.projectId)?(w.projectCode||''):'COMMON',
+      workDetails:(w.title||'Common work')+(w.details?'\n'+w.details:''),
+      createdDate:date,createdTime:'',month:parts[1]||'',year:parts[0]||'',
+      timestamp:w.createdAt||0,status:w.status==='completed'?'completed':'pending',
+      source:'common',liveStatus:w.status||'open',assignedName:w.assignedName||''
+    };
+    if(fm&&row.month!==fm)return;
+    if(fy&&row.year!==fy)return;
+    if(fp==='common'&&row.source!=='common')return;
+    if(fp&&fp!=='common'&&row.projectId!==fp)return;
+    if(fs==='completed'&&row.status!=='completed')return;
+    if(fs==='pending'&&row.status==='completed')return;
+    filtered.push({id:'cw-'+id,data:row});
   });
   filtered.sort(function(a,b){return(b.data.timestamp||0)-(a.data.timestamp||0)});
   var cont=document.getElementById('histCont'),emp=document.getElementById('histE');
@@ -591,13 +678,16 @@ function loadHist(){
       html+='<div class="hist-date"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:.9rem">'+dLabel+'</span><span style="color:var(--text-sec);font-size:.8rem">'+dReps.length+' report(s)</span></div></div>';
       for(var l=0;l<dReps.length;l++){
         var r=dReps[l].data;var rid=dReps[l].id;
-        var isPend=r.status==='pending';
+        var isLive=!!r.liveStatus;
+        var isPend=r.status==='pending'&&!isLive;
+        var label=isLive?(r.liveStatus==='progress'?'In progress':r.liveStatus==='completed'?'Completed':'Open'):(r.status||'pending');
         var completeBtn='';
         if(isPend){
           completeBtn='<button class="complete-btn" onclick="markComplete(\''+rid+'\')"><i class="fas fa-check"></i> Mark Completed</button>';
         }
         var commonTag=(r.source==='common'||r.projectCode==='COMMON')?' <span class="bs bs-active">Common</span>':'';
-        html+='<div class="work-detail" style="margin-left:1.5rem"><div class="meta"><span><i class="fas fa-clock"></i> '+(r.createdTime||'')+'</span><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+'</span>'+commonTag+'<span class="bs '+(isPend?'bs-pending':'bs-done')+'">'+(r.status||'pending')+'</span></div><div class="work-text">'+escH(r.workDetails||'')+'</div>';
+        var withWho=isLive?'<span><i class="fas fa-user"></i> '+(r.assignedName?escH(r.assignedName):'Open for everyone')+'</span>':'';
+        html+='<div class="work-detail" style="margin-left:1.5rem"><div class="meta"><span><i class="fas fa-clock"></i> '+(r.createdTime||'')+'</span><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+'</span>'+commonTag+withWho+'<span class="bs '+((label==='Completed'||r.status==='completed')&&label!=='In progress'&&label!=='Open'?'bs-done':'bs-pending')+'">'+escH(label)+'</span></div><div class="work-text">'+escH(r.workDetails||'')+'</div>';
         if(r.status==='completed'&&r.completedDate){
           html+='<div style="margin-top:.5rem;font-size:.82rem;color:var(--success)"><i class="fas fa-check-circle"></i> Completed: '+fD(r.completedDate)+' '+(r.completedTime||'')+'</div>';
         }
@@ -659,15 +749,14 @@ async function chgPass(){
 /* === COMMAND WORKS === */
 function bindEmpCmd(){
   if(empCmdBound)return;empCmdBound=true;
-  document.getElementById('empCmdList').addEventListener('click',onEmpCmdClick);
+  document.getElementById('empBoardWrap').addEventListener('pointerdown',onEmpPointerDown,{passive:false});
+  document.getElementById('empBoardWrap').addEventListener('click',onEmpCmdClick);
+  document.getElementById('empDoneWrap').addEventListener('click',onEmpCmdClick);
   document.getElementById('homeCmdList').addEventListener('click',onEmpCmdClick);
-  document.getElementById('empCmdTabs').addEventListener('click',function(e){
-    var t=e.target.closest('[data-tab]');if(!t)return;
-    empCmdTab=t.getAttribute('data-tab');
-    renEmpCmd();
-  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&empDragState)endEmpDrag()});
 }
 function onEmpCmdClick(e){
+  if(empSuppressClick){empSuppressClick=false;return}
   var btn=e.target.closest('[data-act]');if(!btn)return;
   var id=btn.getAttribute('data-id');
   var act=btn.getAttribute('data-act');
@@ -791,29 +880,243 @@ function renHomeCmd(){
   box.style.display='block';
   document.getElementById('homeCmdList').innerHTML=open.map(function(item){return empTicketHtml(item.id,item.w,'open',false)}).join('');
 }
+function empOwnsTicket(w){return !!(CU&&w&&w.createdBy===CU.uid)}
+function personOnProject(uid,projectId){
+  return Object.values(allA).some(function(a){return a&&a.projectId===projectId&&a.employeeId===uid});
+}
+function empBoardCanSee(w){
+  if(!w)return false;
+  if(empOwnsTicket(w))return true;
+  if(w.selfTag){
+    if(w.ticketType==='project'&&w.projectId)return !!myProjectIds()[w.projectId];
+    return true;
+  }
+  return empCanSeeCmd(w);
+}
+function empPeople(){
+  var list=Object.keys(aE).map(function(uid){return {uid:uid,name:(aE[uid]&&aE[uid].fullName)||'Employee',code:(aE[uid]&&aE[uid].employeeId)||''}});
+  list.sort(function(a,b){
+    if(a.uid===CU.uid)return -1;
+    if(b.uid===CU.uid)return 1;
+    return a.name.localeCompare(b.name);
+  });
+  if(CU&&!aE[CU.uid])list.unshift({uid:CU.uid,name:myD.fullName||'Me',code:myD.employeeId||''});
+  return list;
+}
+function adminPeople(){
+  var list=Object.keys(aAdmins).map(function(uid){
+    var a=aAdmins[uid]||{};
+    return {uid:uid,name:a.fullName||a.name||(a.email?String(a.email).split('@')[0]:'Admin')};
+  });
+  list.sort(function(a,b){return a.name.localeCompare(b.name)});
+  return list;
+}
+function empColTickets(kind,uid,q){
+  var list=[];
+  Object.keys(aC).forEach(function(id){
+    var w=aC[id];
+    if(!w||w.status==='completed'||!empBoardCanSee(w)||!cmdSearchMatch(w))return;
+    if(q&&!cmdSearchMatch(w))return;
+    var assigned=w.assignedTo||'';
+    if(kind==='pool'){if(w.selfTag||assigned)return}
+    else if(kind==='emp'){if(w.selfTag||assigned!==uid)return}
+    else if(kind==='admin'){if(!w.selfTag||(w.selfAdminId||assigned)!==uid)return}
+    list.push({id:id,w:w});
+  });
+  return cmdRankSort(list);
+}
+function empBoardCard(id,w){
+  var pr=w.priority||'Normal';
+  var prc=cmdPrClass(pr);
+  var mine=empOwnsTicket(w);
+  var link=(w.ticketType==='project'&&(w.projectName||w.projectCode))?'<span><i class="fas fa-folder"></i> '+escH(w.projectName||'Project')+(w.projectCode?' · '+escH(w.projectCode):'')+'</span>':'<span><i class="fas fa-ticket"></i> Free ticket</span>';
+  var who=w.createdByRole==='employee'?'Employee':'Admin';
+  var grip=mine?'<div class="cmd-grip" data-id="'+id+'" title="Drag your ticket" aria-label="Drag your ticket"><i class="fas fa-grip-vertical"></i></div>':'';
+  var html='<article class="cmd-card '+prc+'" data-id="'+id+'"><div class="cmd-card-top">'+grip+'<div class="cmd-card-main"><div class="cmd-card-title-row"><h6>'+escH(w.title||'Untitled')+'</h6><span class="pr-pill pr-'+prc+'">'+escH(pr)+'</span></div>';
+  html+='<div class="cmd-details">'+escH(w.details||'')+'</div>'+handleLine(w);
+  html+='<div class="cmd-meta">'+link+'<span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+who+' · '+escH(w.createdByName||who)+'</span></div>';
+  if(w.assignedTo===CU.uid&&!w.selfTag){
+    html+='<label style="font-size:.78rem;font-weight:700;color:var(--text-sec)">Progress note</label>';
+    html+='<textarea class="form-control emp-note" data-note-for="'+id+'">'+escH(w.progressNote||'')+'</textarea>';
+    html+='<div class="cmd-actions"><button type="button" class="bsc bsc-o" data-act="note" data-id="'+id+'">Save note</button><button type="button" class="bsc bsc-p" data-act="done" data-id="'+id+'"><i class="fas fa-check"></i> Mark completed</button></div>';
+  }else if(!w.assignedTo&&!w.selfTag){
+    html+='<button type="button" class="bsc bsc-p" style="width:100%;min-height:44px;margin-top:.55rem" data-act="take" data-id="'+id+'"><i class="fas fa-hand"></i> Add to my progress</button>';
+  }else if(w.progressNote){
+    html+='<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>';
+  }else if(w.selfTag){
+    html+='<div class="cmd-note"><i class="fas fa-user-shield"></i> '+(w.assignedName||'Admin')+' is doing this</div>';
+  }else if(w.assignedName){
+    html+='<div class="cmd-note"><i class="fas fa-user"></i> '+escH(w.assignedName)+' is handling this</div>';
+  }
+  if(mine)html+='<div class="cmd-actions"><button type="button" class="bsc bsc-o" data-act="edit" data-id="'+id+'"><i class="fas fa-pen"></i> Edit</button><button type="button" class="bsc bsc-o" data-act="del" data-id="'+id+'"><i class="fas fa-trash"></i> Delete</button></div>';
+  html+='</div></div></article>';
+  return html;
+}
 function renEmpCmd(){
-  var groups=splitCmd();
-  var counts={open:groups.open.length,mine:groups.mine.length,done:groups.done.length};
-  document.getElementById('tabOpenC').textContent=counts.open+groups.live.length;
-  document.getElementById('tabMineC').textContent=counts.mine;
-  document.getElementById('tabDoneC').textContent=counts.done;
-  document.querySelectorAll('#empCmdTabs .emp-tab').forEach(function(btn){btn.classList.toggle('active',btn.getAttribute('data-tab')===empCmdTab)});
+  if(empDragState){empRenderPending=true;return}
+  var board=document.getElementById('empBoard');if(!board)return;
+  var sl=board.scrollLeft;
   var focus=document.activeElement;
   var keep=null;
   if(focus&&focus.classList&&focus.classList.contains('emp-note'))keep={id:focus.getAttribute('data-note-for'),value:focus.value,sel:focus.selectionStart};
-  var list=(empCmdTab==='mine'?groups.mine:empCmdTab==='done'?groups.done:groups.open.concat(groups.live)).filter(function(item){return cmdSearchMatch(item.w)});
-  var host=document.getElementById('empCmdList');
-  if(!list.length){
-    var q=empCmdQuery();
-    var empty=q?'No tickets match that search.':empCmdTab==='mine'?'Nothing on your progress list yet. Create a ticket and choose “I will do this”, or take an open ticket.':empCmdTab==='done'?'No completed tickets yet. Finished tickets from every employee and every admin show here.':'No tickets yet. Create one, or wait for an admin or another employee to add work.';
-    host.innerHTML='<div class="empty-s" style="grid-column:1/-1"><i class="fas fa-bullhorn"></i><p>'+empty+'</p></div>';
-    return;
+  function col(kind,uid,title,sub,iconHtml,items,empty){
+    var html='<section class="cmd-col" data-kind="'+kind+'" data-uid="'+(uid||'')+'"><div class="cmd-col-h">'+iconHtml+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
+    if(!items.length)html+='<div class="cmd-empty">'+empty+'</div>';
+    items.forEach(function(item){html+=empBoardCard(item.id,item.w)});
+    return html+'</div></section>';
   }
-  host.innerHTML=list.map(function(item){return empTicketHtml(item.id,item.w,empCmdTab,true)}).join('');
+  var pool=empColTickets('pool','');
+  var html=col('pool','','Open for everyone','Not assigned','<div class="cmd-pool-ic"><i class="fas fa-users"></i></div>',pool,'Drop your own ticket here to open it for everyone.');
+  empPeople().forEach(function(person){
+    var items=empColTickets('emp',person.uid);
+    var mine=person.uid===CU.uid;
+    html+=col('emp',person.uid,mine?'My work':person.name,mine?'Your tickets':person.code,'<div class="cmd-av">'+ini(person.name)+'</div>',items,mine?'Tickets you are doing show here.':'Drop your own ticket here to give it to '+escH(person.name)+'.');
+  });
+  adminPeople().forEach(function(person){
+    var items=empColTickets('admin',person.uid);
+    html+=col('admin',person.uid,person.name,'Admin','<div class="cmd-av">'+ini(person.name)+'</div>',items,'Drop your own ticket here to hand it to this admin.');
+  });
+  board.innerHTML=html;
+  board.scrollLeft=sl;
   if(keep){
-    var el=host.querySelector('.emp-note[data-note-for="'+keep.id+'"]');
-    if(el){el.value=keep.value;el.focus();if(typeof keep.sel==='number')el.setSelectionRange(keep.sel,keep.sel)}
+    var noteEl=board.querySelector('.emp-note[data-note-for="'+keep.id+'"]');
+    if(noteEl){noteEl.value=keep.value;noteEl.focus();if(typeof keep.sel==='number')noteEl.setSelectionRange(keep.sel,keep.sel)}
   }
+  var jump=document.getElementById('empCmdJump');
+  var jv=jump.value;
+  var jhtml='<option value="pool">Open for everyone</option><option value="me">My work</option>';
+  empPeople().forEach(function(person){if(person.uid!==CU.uid)jhtml+='<option value="emp:'+person.uid+'">'+escH(person.name)+'</option>'});
+  adminPeople().forEach(function(person){jhtml+='<option value="admin:'+person.uid+'">Admin · '+escH(person.name)+'</option>'});
+  jump.innerHTML=jhtml;
+  if(Array.prototype.some.call(jump.options,function(o){return o.value===jv}))jump.value=jv;
+  var done=[];
+  Object.keys(aC).forEach(function(id){var w=aC[id];if(w&&w.status==='completed'&&cmdSearchMatch(w))done.push({id:id,w:w})});
+  done.sort(function(a,b){return (b.w.completedAt||0)-(a.w.completedAt||0)});
+  document.getElementById('empDoneLabel').textContent='Show completed ('+Object.keys(aC).filter(function(id){return aC[id]&&aC[id].status==='completed'}).length+')';
+  var show=document.getElementById('empShowDone').checked;
+  document.getElementById('empDoneWrap').style.display=show?'block':'none';
+  var doneHtml=done.length?'': '<div class="cmd-empty">No completed tickets yet</div>';
+  done.forEach(function(item){
+    var w=item.w;
+    var who=w.selfTag?'Admin · '+(w.assignedName||'Admin'):(w.assignedName||'Unassigned');
+    doneHtml+='<article class="cmd-card '+cmdPrClass(w.priority)+'"><div class="cmd-card-title-row"><h6>'+escH(w.title||'')+'</h6><span class="pr-pill pr-'+cmdPrClass(w.priority)+'">'+escH(w.priority||'Normal')+'</span></div><div class="cmd-details">'+escH(w.details||'')+'</div>'+handleLine(w)+'<div class="cmd-meta"><span><i class="fas fa-user"></i> '+escH(who)+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+escH(w.createdByName||'Unknown')+'</span></div>'+(empOwnsTicket(w)?'<div class="cmd-actions"><button type="button" class="bsc bsc-o" data-act="del" data-id="'+item.id+'"><i class="fas fa-trash"></i> Delete</button></div>':'')+'</article>';
+  });
+  document.getElementById('empDoneList').innerHTML=doneHtml;
+}
+function jumpEmpCol(key){
+  var col=null;
+  if(key==='pool')col=document.querySelector('#empBoard .cmd-col[data-kind="pool"]');
+  else if(key==='me'&&CU)col=document.querySelector('#empBoard .cmd-col[data-kind="emp"][data-uid="'+CU.uid+'"]');
+  else if(key.indexOf('emp:')===0)col=document.querySelector('#empBoard .cmd-col[data-kind="emp"][data-uid="'+key.slice(4)+'"]');
+  else if(key.indexOf('admin:')===0)col=document.querySelector('#empBoard .cmd-col[data-kind="admin"][data-uid="'+key.slice(6)+'"]');
+  if(col)col.scrollIntoView({behavior:'smooth',inline:'start',block:'nearest'});
+}
+function onEmpPointerDown(e){
+  var grip=e.target.closest('.cmd-grip');if(!grip||empDragState)return;
+  var id=grip.getAttribute('data-id');
+  var w=aC[id];
+  if(!empOwnsTicket(w)){T('You can only move a ticket you created','error');return}
+  e.preventDefault();
+  beginEmpDrag(e,id);
+}
+function beginEmpDrag(e,id){
+  var card=document.querySelector('#empBoard .cmd-card[data-id="'+id+'"]');if(!card)return;
+  var rect=card.getBoundingClientRect();
+  var ghost=card.cloneNode(true);
+  ghost.classList.add('cmd-ghost');
+  ghost.style.width=rect.width+'px';
+  ghost.style.left=rect.left+'px';
+  ghost.style.top=rect.top+'px';
+  document.body.appendChild(ghost);
+  card.classList.add('cmd-dragging');
+  document.body.classList.add('cmd-dragging-body');
+  empDragState={id:id,ghost:ghost,sx:e.clientX,sy:e.clientY,dx:e.clientX-rect.left,dy:e.clientY-rect.top,moved:false,lastEv:e,raf:0};
+  document.addEventListener('pointermove',empDragMove,{passive:false});
+  document.addEventListener('pointerup',empDragEnd);
+  document.addEventListener('pointercancel',endEmpDrag);
+  empDragState.raf=requestAnimationFrame(empScrollLoop);
+}
+function empDragMove(e){
+  if(!empDragState)return;
+  e.preventDefault();
+  empDragState.lastEv=e;
+  if(Math.hypot(e.clientX-empDragState.sx,e.clientY-empDragState.sy)>8)empDragState.moved=true;
+  empDragState.ghost.style.left=(e.clientX-empDragState.dx)+'px';
+  empDragState.ghost.style.top=(e.clientY-empDragState.dy)+'px';
+  var col=empColAt(e.clientX,e.clientY);
+  document.querySelectorAll('#empBoard .cmd-col').forEach(function(c){c.classList.toggle('drag-over',c===col)});
+}
+function empScrollLoop(){
+  if(!empDragState)return;
+  var board=document.getElementById('empBoard');
+  var ev=empDragState.lastEv;
+  if(board&&ev){
+    var r=board.getBoundingClientRect();
+    if(ev.clientX>r.right-64)board.scrollLeft+=14;
+    else if(ev.clientX<r.left+64)board.scrollLeft-=14;
+  }
+  empDragState.raf=requestAnimationFrame(empScrollLoop);
+}
+function empColAt(x,y){
+  var found=null;
+  document.querySelectorAll('#empBoard .cmd-col').forEach(function(col){
+    var r=col.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)found=col;
+  });
+  return found;
+}
+function empDragEnd(e){
+  if(!empDragState)return;
+  var moved=empDragState.moved;
+  var id=empDragState.id;
+  var col=moved?empColAt(e.clientX,e.clientY):null;
+  endEmpDrag();
+  if(moved)empSuppressClick=true;
+  if(!moved||!col)return;
+  moveOwnTicket(id,col.getAttribute('data-kind'),col.getAttribute('data-uid')||'');
+}
+function endEmpDrag(){
+  if(!empDragState)return;
+  cancelAnimationFrame(empDragState.raf);
+  document.removeEventListener('pointermove',empDragMove);
+  document.removeEventListener('pointerup',empDragEnd);
+  document.removeEventListener('pointercancel',endEmpDrag);
+  if(empDragState.ghost&&empDragState.ghost.parentNode)empDragState.ghost.remove();
+  document.querySelectorAll('.cmd-card.cmd-dragging').forEach(function(c){c.classList.remove('cmd-dragging')});
+  document.querySelectorAll('.cmd-col.drag-over').forEach(function(c){c.classList.remove('drag-over')});
+  document.body.classList.remove('cmd-dragging-body');
+  empDragState=null;
+  if(empRenderPending){empRenderPending=false;renEmpCmd()}
+}
+async function moveOwnTicket(id,kind,uid){
+  var w=aC[id];
+  if(!empOwnsTicket(w)||w.status==='completed'){T('You can only move a ticket you created','error');return}
+  var now=Date.now();
+  var name=myD.fullName||'Employee';
+  var data=null;
+  if(kind==='pool'){
+    if(!w.assignedTo&&!w.selfTag)return;
+    data={assignedTo:'',assignedName:'',assignedCode:'',selfTag:false,selfAdminId:'',status:'open',takenAt:0,assignedAt:0,progressNote:'',updatedAt:now,handlers:addHandle(w,{uid:CU.uid,name:name,role:'employee',action:'released',at:now})};
+  }else if(kind==='emp'){
+    if(!uid)return;
+    if(w.ticketType==='project'&&w.projectId&&!personOnProject(uid,w.projectId)){T('This project ticket can only go to people assigned to that project','error');return}
+    if(!w.selfTag&&w.assignedTo===uid)return;
+    var emp=aE[uid]||(uid===CU.uid?myD:{});
+    data={assignedTo:uid,assignedName:emp.fullName||'Employee',assignedCode:emp.employeeId||'',selfTag:false,selfAdminId:'',status:'progress',assignedAt:now,takenAt:uid===CU.uid?now:0,updatedAt:now,handlers:addHandle(w,{uid:uid,name:emp.fullName||'Employee',role:'employee',action:uid===CU.uid?'self':'assigned',at:now})};
+  }else if(kind==='admin'){
+    if(!uid)return;
+    if(w.selfTag&&(w.selfAdminId||w.assignedTo)===uid)return;
+    var ad=aAdmins[uid]||{};
+    var an=ad.fullName||ad.name||'Admin';
+    data={assignedTo:uid,assignedName:an,assignedCode:'ADMIN',selfTag:true,selfAdminId:uid,status:'progress',assignedAt:now,takenAt:now,updatedAt:now,handlers:addHandle(w,{uid:uid,name:an,role:'admin',action:'assigned',at:now})};
+  }
+  if(!data)return;
+  sL();
+  try{
+    await db.ref('commonWorks/'+id).update(data);
+    hL();
+    T(kind==='pool'?'Ticket is open for everyone':kind==='admin'?'Handed to the admin':'Moved to '+(data.assignedName||'employee'),'success');
+  }catch(e){hL();T(e.message,'error')}
 }
 function empTicketHtml(id,w,mode,full){
   var pr=w.priority||'Normal';
