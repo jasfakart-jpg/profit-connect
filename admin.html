@@ -618,9 +618,9 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="emMo" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Department</label><input type="text" class="form-control" id="emDp" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Designation</label><input type="text" class="form-control" id="emDs" autocomplete="off"></div>
-    <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Password *</label><input type="password" class="form-control" id="emPw" autocomplete="new-password"></div>
-    <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password *</label><input type="password" class="form-control" id="emPw2" autocomplete="new-password"></div>
-    <div class="col-12" id="emResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetEmpPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">A new password for another login is set from the email link. Old work records are not changed.</p></div>
+    <div class="col-12" id="emOldWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Previous password</label><input type="text" class="form-control" id="emOldPw" autocomplete="off"><p id="emOldHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Leave the new password empty to keep it.</p></div>
+    <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPwLbl">Password *</label><input type="password" class="form-control" id="emPw" autocomplete="new-password"></div>
+    <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPw2Lbl">Confirm password *</label><input type="password" class="form-control" id="emPw2" autocomplete="new-password"></div>
   </div></div>
   <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem;min-height:44px" onclick="saveEmp()">Save</button></div>
 </div></div></div>
@@ -942,13 +942,15 @@ async function dropEmployeeProfile(uid){
   await db.ref().update(updates);
 }
 function openEmpM(id){
-  ['emN','emId','emEm','emMo','emDp','emDs','emPw','emPw2'].forEach(function(x){document.getElementById(x).value=''});
+  ['emN','emId','emEm','emMo','emDp','emDs','emPw','emPw2','emOldPw'].forEach(function(x){document.getElementById(x).value=''});
   document.getElementById('edEmpId').value='';
   document.getElementById('empMT').textContent='Add Employee';
   document.getElementById('emEm').readOnly=false;
+  document.getElementById('emPwLbl').textContent='Password *';
+  document.getElementById('emPw2Lbl').textContent='Confirm password *';
   document.getElementById('emPwWrap').style.display='';
   document.getElementById('emPw2Wrap').style.display='';
-  document.getElementById('emResetWrap').style.display='none';
+  document.getElementById('emOldWrap').style.display='none';
   if(id&&aE[id]){
     var v=aE[id];
     document.getElementById('edEmpId').value=id;
@@ -960,9 +962,11 @@ function openEmpM(id){
     document.getElementById('emDp').value=v.department||'';
     document.getElementById('emDs').value=v.designation||'';
     document.getElementById('empMT').textContent='Edit Employee';
-    document.getElementById('emPwWrap').style.display='none';
-    document.getElementById('emPw2Wrap').style.display='none';
-    document.getElementById('emResetWrap').style.display='';
+    document.getElementById('emPwLbl').textContent='New password';
+    document.getElementById('emPw2Lbl').textContent='Confirm new password';
+    document.getElementById('emOldWrap').style.display='';
+    document.getElementById('emOldPw').value=v.loginPassword||'';
+    document.getElementById('emOldHint').textContent=v.loginPassword?'This is the password saved for this login. Leave the new password empty to keep it.':'This password was not saved before. Type the one they use now only if you are setting a new password.';
   }
   new bootstrap.Modal(document.getElementById('empModal')).show();
 }
@@ -977,24 +981,30 @@ async function saveEmp(){
   var data={fullName:name,employeeId:empId,email:email,mobile:document.getElementById('emMo').value.trim(),department:document.getElementById('emDp').value.trim(),designation:document.getElementById('emDs').value.trim(),updatedAt:Date.now()};
   sL();
   try{
-    if(eid){await db.ref('employees/'+eid).update(data);T('Employee updated. Past work is unchanged','success')}
+    if(eid){
+      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value,oldPass=document.getElementById('emOldPw').value;
+      if(pass||pass2){
+        if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
+        if(pass!==pass2){hL();T('Passwords do not match','error');return}
+        if(!oldPass){hL();T('Previous password is missing. Type the one they use now','error');return}
+        await reclaimLogin(email,oldPass,pass);
+        data.loginPassword=pass;
+      }
+      await db.ref('employees/'+eid).update(data);
+      T(pass?'Password updated. Past work is unchanged':'Employee updated. Past work is unchanged','success');
+    }
     else{
       var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value;
       if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
       if(pass!==pass2){hL();T('Passwords do not match','error');return}
       var uid=await createLogin(email,pass);
       data.createdAt=Date.now();
+      data.loginPassword=pass;
       await db.ref('employees/'+uid).set(data);
       T('Employee account created','success');
     }
     bootstrap.Modal.getInstance(document.getElementById('empModal')).hide();hL();
-  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':e.message,'error')}
-}
-function resetEmpPass(){
-  var email=document.getElementById('emEm').value.trim();
-  if(!email){T('No email on this account','error');return}
-  sL();
-  auth.sendPasswordResetEmail(email).then(function(){hL();T('Password reset email sent','success')}).catch(function(e){hL();T(e.message,'error')});
+  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':badPass(e.code)?'Current password is not correct':e.message,'error')}
 }
 function makeAdmin(uid){
   var v=aE[uid];
