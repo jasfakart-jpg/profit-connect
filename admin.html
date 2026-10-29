@@ -271,6 +271,10 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 .setup-sec{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#064E3B,#0D9488);padding:1rem}
 .setup-card{background:var(--bg-card);border-radius:20px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .form-control{background-color:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.7rem 1rem;font-size:.9rem;transition:border .2s}
+.pw-box{position:relative}
+.pw-box .form-control{padding-right:2.75rem}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:none;background:transparent;color:var(--text-sec);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pw-eye:hover{color:var(--text)}
 .form-select{background-color:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.7rem 2.2rem .7rem 1rem;font-size:.9rem;transition:border .2s;background-repeat:no-repeat;background-position:right .75rem center;background-size:16px 12px}
 .form-control:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
 .profile-hdr{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}
@@ -384,7 +388,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
         <p style="color:var(--text-sec);font-size:.88rem;margin-top:.5rem">First time setup — no admin exists yet</p>
       </div>
       <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Email</label><input type="email" class="form-control" id="setupEmail" placeholder="admin@company.com"></div>
-      <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Password</label><input type="password" class="form-control" id="setupPass" placeholder="Min 6 characters"></div>
+      <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Password</label><div class="pw-box"><input type="password" class="form-control" id="setupPass" placeholder="Min 6 characters" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
       <button class="bsc bsc-p w-100" style="padding:.7rem;font-size:.95rem" onclick="doSetup()"><i class="fas fa-user-shield"></i> Create & Login</button>
       <p class="text-center mt-3" style="font-size:.85rem"><a href="index.html" style="color:var(--primary)"><i class="fas fa-arrow-left"></i> Back to Login</a></p>
     </div>
@@ -577,8 +581,8 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <div id="pg-prof" class="page">
         <div class="profile-hdr"><div class="profile-av" id="prAv">A</div><div><h3 id="prNm">Admin</h3><p style="color:var(--text-sec)" id="prEm">admin@company.com</p><span class="bs bs-active">Administrator</span></div></div>
         <div class="tc" style="max-width:600px"><div class="ch"><h5>Change Password</h5></div><div style="padding:1.5rem">
-          <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">New Password</label><input type="password" class="form-control" id="nwP"></div>
-          <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm</label><input type="password" class="form-control" id="cfP"></div>
+          <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">New Password</label><div class="pw-box"><input type="password" class="form-control" id="nwP" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
+          <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm</label><div class="pw-box"><input type="password" class="form-control" id="cfP" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
           <button class="bsc bsc-p" style="padding:.5rem 1.5rem" onclick="chgPass()">Update</button>
         </div></div>
       </div>
@@ -618,9 +622,9 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="emMo" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Department</label><input type="text" class="form-control" id="emDp" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Designation</label><input type="text" class="form-control" id="emDs" autocomplete="off"></div>
-    <div class="col-12" id="emOldWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Previous password</label><input type="text" class="form-control" id="emOldPw" autocomplete="off"><p id="emOldHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Leave the new password empty to keep it.</p></div>
-    <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPwLbl">Password *</label><input type="password" class="form-control" id="emPw" autocomplete="new-password"></div>
-    <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPw2Lbl">Confirm password *</label><input type="password" class="form-control" id="emPw2" autocomplete="new-password"></div>
+    <div class="col-12" id="emOldWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Previous password</label><input type="text" class="form-control" id="emOldPw" readonly autocomplete="off"><p id="emOldHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
+    <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPwLbl">Password *</label><div class="pw-box"><input type="password" class="form-control" id="emPw" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
+    <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPw2Lbl">Confirm password *</label><div class="pw-box"><input type="password" class="form-control" id="emPw2" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
   </div></div>
   <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem;min-height:44px" onclick="saveEmp()">Save</button></div>
 </div></div></div>
@@ -632,15 +636,16 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Role</label><input type="text" class="form-control" id="adR" placeholder="Administrator" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Email *</label><input type="email" class="form-control" id="adEm" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="adMo" autocomplete="off"></div>
-    <div class="col-md-6" id="adPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="adPwLbl">Password *</label><input type="password" class="form-control" id="adPw" autocomplete="new-password"></div>
-    <div class="col-md-6" id="adPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password</label><input type="password" class="form-control" id="adPw2" autocomplete="new-password"></div>
-    <div class="col-12" id="adResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetAdminPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">Another admin sets the new password from that email. Your own password can be typed above.</p></div>
+    <div class="col-12" id="adPrevWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Previous password</label><input type="text" class="form-control" id="adPrevPw" readonly autocomplete="off"><p id="adPrevHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
+    <div class="col-md-6" id="adPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="adPwLbl">Password *</label><div class="pw-box"><input type="password" class="form-control" id="adPw" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
+    <div class="col-md-6" id="adPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password</label><div class="pw-box"><input type="password" class="form-control" id="adPw2" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
+    <div class="col-12" id="adResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetAdminPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This login has no saved password, so it cannot be replaced from here. The reset email is the way to set a new one.</p></div>
     <div class="col-12" id="adOldWrap" style="display:none">
       <div style="border:1px solid var(--border);border-radius:12px;padding:.9rem;background:var(--bg)">
         <strong>This email already has a login</strong>
         <p style="color:var(--text-sec);font-size:.84rem;margin:.35rem 0 .7rem">Deleting an employee removes the profile, but the email login stays. Enter the password that employee used. The new password above becomes their admin password.</p>
         <label class="form-label" style="font-size:.85rem;font-weight:600">Current password of this email *</label>
-        <input type="password" class="form-control" id="adOldPw" autocomplete="off">
+        <div class="pw-box"><input type="password" class="form-control" id="adOldPw" autocomplete="off"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div>
         <button type="button" class="bsc bsc-o" style="margin-top:.7rem;min-height:44px" onclick="resetAdminPass()">Forgot it? Send a reset email</button>
       </div>
     </div>
@@ -762,7 +767,7 @@ async function doSetup(){
   if(pass.length<6){T('Password min 6 chars','error');return}
   sL();try{
     var cred=await auth.createUserWithEmailAndPassword(email,pass);
-    await db.ref('admins/'+cred.user.uid).set({email:email,createdAt:Date.now()});
+    await db.ref('admins/'+cred.user.uid).set({email:email,createdAt:Date.now(),loginPassword:pass});
     CU=cred.user;
     document.getElementById('setupSec').style.display='none';
     document.getElementById('dashLayout').style.display='flex';
@@ -941,6 +946,7 @@ async function dropEmployeeProfile(uid){
   });
   await db.ref().update(updates);
 }
+function togPw(btn){var i=btn.parentElement.querySelector('input');var ic=btn.querySelector('i');if(!i||!ic)return;if(i.type==='password'){i.type='text';ic.className='fas fa-eye-slash'}else{i.type='password';ic.className='fas fa-eye'}}
 function openEmpM(id){
   ['emN','emId','emEm','emMo','emDp','emDs','emPw','emPw2','emOldPw'].forEach(function(x){document.getElementById(x).value=''});
   document.getElementById('edEmpId').value='';
@@ -966,7 +972,7 @@ function openEmpM(id){
     document.getElementById('emPw2Lbl').textContent='Confirm new password';
     document.getElementById('emOldWrap').style.display='';
     document.getElementById('emOldPw').value=v.loginPassword||'';
-    document.getElementById('emOldHint').textContent=v.loginPassword?'This is the password saved for this login. Leave the new password empty to keep it.':'This password was not saved before. Type the one they use now only if you are setting a new password.';
+    document.getElementById('emOldHint').textContent=v.loginPassword?'This is the password saved for this login. Type a new password below to replace it. The old one is not required.':'No password was saved for this login yet, so a new password cannot replace it from here.';
   }
   new bootstrap.Modal(document.getElementById('empModal')).show();
 }
@@ -982,11 +988,11 @@ async function saveEmp(){
   sL();
   try{
     if(eid){
-      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value,oldPass=document.getElementById('emOldPw').value;
+      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value,oldPass=(aE[eid]&&aE[eid].loginPassword)||'';
       if(pass||pass2){
         if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
         if(pass!==pass2){hL();T('Passwords do not match','error');return}
-        if(!oldPass){hL();T('Previous password is missing. Type the one they use now','error');return}
+        if(!oldPass){hL();T('No saved password on this account, so it cannot be replaced from here','error');return}
         await reclaimLogin(email,oldPass,pass);
         data.loginPassword=pass;
       }
@@ -1004,7 +1010,7 @@ async function saveEmp(){
       T('Employee account created','success');
     }
     bootstrap.Modal.getInstance(document.getElementById('empModal')).hide();hL();
-  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':badPass(e.code)?'Current password is not correct':e.message,'error')}
+  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':badPass(e.code)?'The saved password does not match this login, so it was not replaced':e.message,'error')}
 }
 function makeAdmin(uid){
   var v=aE[uid];
@@ -1016,10 +1022,12 @@ function makeAdmin(uid){
   document.getElementById('cfmB').onclick=async function(){
     sL();
     try{
-      await db.ref('admins/'+uid).set({
+      var adminRow={
         fullName:v.fullName||'',name:v.fullName||'',role:'Administrator',email:v.email||'',mobile:v.mobile||'',
         createdAt:Date.now(),createdBy:CU?CU.uid:'',promotedFrom:'employee',updatedAt:Date.now()
-      });
+      };
+      if(v.loginPassword)adminRow.loginPassword=v.loginPassword;
+      await db.ref('admins/'+uid).set(adminRow);
       await dropEmployeeProfile(uid);
       var modal=bootstrap.Modal.getInstance(document.getElementById('cfmModal'));
       if(modal)modal.hide();
@@ -1081,6 +1089,8 @@ function openAdminM(id){
   document.getElementById('adPw2Wrap').style.display='';
   document.getElementById('adResetWrap').style.display='none';
   document.getElementById('adOldWrap').style.display='none';
+  document.getElementById('adPrevWrap').style.display='none';
+  document.getElementById('adPrevPw').value='';
   if(id&&aAdmins[id]){
     var v=aAdmins[id];
     document.getElementById('edAdminId').value=id;
@@ -1091,10 +1101,14 @@ function openAdminM(id){
     document.getElementById('adMo').value=v.mobile||'';
     document.getElementById('adminMT').textContent='Edit Admin';
     var mine=CU&&id===CU.uid;
-    document.getElementById('adPwLbl').textContent=mine?'New password':'Password';
-    document.getElementById('adPwWrap').style.display=mine?'':'none';
-    document.getElementById('adPw2Wrap').style.display=mine?'':'none';
-    document.getElementById('adResetWrap').style.display=mine?'none':'';
+    var saved=!!v.loginPassword;
+    document.getElementById('adPwLbl').textContent='New password';
+    document.getElementById('adPwWrap').style.display='';
+    document.getElementById('adPw2Wrap').style.display='';
+    document.getElementById('adPrevWrap').style.display='';
+    document.getElementById('adPrevPw').value=v.loginPassword||'';
+    document.getElementById('adPrevHint').textContent=saved?'This is the password saved for this login. Type a new password below to replace it. The old one is not required.':(mine?'Type a new password below to replace yours.':'No password was saved for this login yet, so it cannot be replaced from here.');
+    document.getElementById('adResetWrap').style.display=(!mine&&!saved)?'':'none';
   }
   new bootstrap.Modal(document.getElementById('adminModal')).show();
 }
@@ -1106,28 +1120,40 @@ async function saveAdmin(){
   if(Object.entries(aAdmins).some(function(e){return e[0]!==eid&&(e[1].email||'').toLowerCase()===email.toLowerCase()})){T('This email is already an admin','error');return}
   var data={fullName:name,name:name,role:document.getElementById('adR').value.trim()||'Administrator',email:email,mobile:document.getElementById('adMo').value.trim(),updatedAt:Date.now()};
   var pass=document.getElementById('adPw').value,pass2=document.getElementById('adPw2').value;
-  if(CU&&eid===CU.uid&&pass){
+  if(pass||pass2){
     if(pass.length<6){T('Password must be at least 6 characters','error');return}
     if(pass!==pass2){T('Passwords do not match','error');return}
+    if(eid&&!(CU&&eid===CU.uid)&&!((aAdmins[eid]&&aAdmins[eid].loginPassword)||'')){T('No saved password on this admin, so it cannot be replaced from here','error');return}
   }
   sL();
   try{
     if(eid){
+      if(pass){
+        if(CU&&eid===CU.uid)await CU.updatePassword(pass);
+        else await reclaimLogin(email,(aAdmins[eid]&&aAdmins[eid].loginPassword)||'',pass);
+        data.loginPassword=pass;
+      }
       await db.ref('admins/'+eid).update(data);
-      if(CU&&eid===CU.uid&&pass)await CU.updatePassword(pass);
       if(CU&&eid===CU.uid)adminName=name;
-      T('Admin updated','success');
+      T(pass?'Password updated':'Admin updated','success');
     }else{
       var oldPass=document.getElementById('adOldPw').value;
       var held=Object.entries(aE).find(function(e){return (e[1].email||'').toLowerCase()===email.toLowerCase()});
-      if(!held){
-        if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
-        if(pass!==pass2){hL();T('Passwords do not match','error');return}
+      if(!held&&!pass){
+        hL();T('Password must be at least 6 characters','error');return
       }
       var uid;
-      if(held)uid=held[0];
-      else if(oldPass)uid=await reclaimLogin(email,oldPass,pass);
-      else uid=await createLogin(email,pass);
+      if(held){
+        uid=held[0];
+        if(pass){
+          var heldPass=held[1].loginPassword||'';
+          if(!heldPass){hL();T('No saved password on this employee, so it cannot be replaced from here','error');return}
+          await reclaimLogin(email,heldPass,pass);
+          data.loginPassword=pass;
+        }else if(held[1].loginPassword)data.loginPassword=held[1].loginPassword;
+      }
+      else if(oldPass){uid=await reclaimLogin(email,oldPass,pass);data.loginPassword=pass}
+      else{uid=await createLogin(email,pass);data.loginPassword=pass}
       data.createdAt=Date.now();data.createdBy=CU?CU.uid:'';
       await db.ref('admins/'+uid).set(data);
       if(aE[uid])await dropEmployeeProfile(uid);
@@ -2158,7 +2184,7 @@ async function reopenCmd(id){
 
 /* ===== PROFILE ===== */
 function renProf(){}
-async function chgPass(){var np=document.getElementById('nwP').value,cp=document.getElementById('cfP').value;if(!np||!cp){T('Fill all fields','error');return}if(np!==cp){T('Passwords mismatch','error');return}if(np.length<6){T('Min 6 chars','error');return}sL();try{await CU.updatePassword(np);hL();T('Updated','success');document.getElementById('nwP').value='';document.getElementById('cfP').value=''}catch(e){hL();T(e.message,'error')}}
+async function chgPass(){var np=document.getElementById('nwP').value,cp=document.getElementById('cfP').value;if(!np||!cp){T('Fill all fields','error');return}if(np!==cp){T('Passwords mismatch','error');return}if(np.length<6){T('Min 6 chars','error');return}sL();try{await CU.updatePassword(np);await db.ref('admins/'+CU.uid).update({loginPassword:np,updatedAt:Date.now()});hL();T('Updated','success');document.getElementById('nwP').value='';document.getElementById('cfP').value=''}catch(e){hL();T(e.message,'error')}}
 
 /* ===== LOGOUT ===== */
 async function doLogout(){sL();try{await auth.signOut()}catch(e){}window.location.href='index.html'}
