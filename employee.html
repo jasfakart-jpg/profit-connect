@@ -299,7 +299,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 </div>
 <div id="pg-cmd" class="page active">
 <div class="emp-cmd-head">
-<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5">Every employee and every admin is listed here with the tickets they are handling. You can drag only a ticket you created, onto another employee or an admin. Completed tickets stay visible so you can see the work.</p>
+<p class="cmd-hint" style="color:var(--text-sec);font-size:.9rem;line-height:1.5">Every employee and every admin is listed here with the tickets they are handling. Project work an employee submits also shows in that person’s column. You can drag only a ticket you created, onto another employee or an admin. Completed work stays visible so you can see what is going on.</p>
 <button type="button" class="bsc bsc-p" onclick="openEmpCmdM()"><i class="fas fa-plus"></i> New ticket</button>
 </div>
 <div class="cmd-tools">
@@ -399,7 +399,7 @@ firebase.initializeApp(FC);
 var auth=firebase.auth(),db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-var CU=null,myD=null,aP={},myA={},allA={},aE={},aAdmins={},myR={},aC={},selProj=null,myCh=null,curPage='pg-cmd',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false,empDragState=null,empSuppressClick=false,empRenderPending=false;
+var CU=null,myD=null,aP={},myA={},allA={},aE={},aAdmins={},myR={},allR={},aC={},selProj=null,myCh=null,curPage='pg-cmd',empCmdTab='open',empCmdQueryTouched=false,cmdErrShown=false,empCmdBound=false,empDragState=null,empSuppressClick=false,empRenderPending=false;
 var MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 /* === UTILS === */
@@ -463,9 +463,9 @@ function loadD(){
     if(curPage==='pg-home')renHome();if(curPage==='pg-work')renWorkPage();if(curPage==='pg-hist')loadHist();if(curPage==='pg-cmd')renEmpCmd();
   });
   db.ref('reports').on('value',function(s){
-    var all=s.val()||{};myR={};
-    Object.keys(all).forEach(function(id){if(all[id].employeeId===CU.uid)myR[id]=all[id]});
-    if(curPage==='pg-home')renHome();if(curPage==='pg-hist')loadHist();if(curPage==='pg-work')renMyCommon();
+    allR=s.val()||{};myR={};
+    Object.keys(allR).forEach(function(id){if(allR[id].employeeId===CU.uid)myR[id]=allR[id]});
+    if(curPage==='pg-home')renHome();if(curPage==='pg-hist')loadHist();if(curPage==='pg-work')renMyCommon();if(curPage==='pg-cmd')renEmpCmd();
   });
   db.ref('commonWorks').on('value',function(s){
     aC=s.val()||{};updEmpCmdBadge();
@@ -766,6 +766,7 @@ function onEmpCmdClick(e){
   else if(act==='release')releaseCommon(id);
   else if(act==='edit')openEmpCmdM(id);
   else if(act==='del')delEmpCmd(id);
+  else if(act==='rdone')markComplete(id);
 }
 function myProjectIds(){
   var ids={};
@@ -952,6 +953,35 @@ function empBoardCard(id,w){
   html+='</div></div></article>';
   return html;
 }
+function isProjectReport(r){
+  if(!r||!r.employeeId)return false;
+  if(r.source==='common'||r.commonWorkId||r.projectCode==='COMMON'||r.projectId==='common')return false;
+  return !!(r.projectId||r.projectName);
+}
+function projWorks(uid,done){
+  var q=empCmdQuery();
+  var list=[];
+  Object.keys(allR).forEach(function(id){
+    var r=allR[id];
+    if(!isProjectReport(r)||r.employeeId!==uid)return;
+    var isDone=r.status==='completed';
+    if(done?!isDone:isDone)return;
+    if(q){
+      var hay=((r.projectName||'')+' '+(r.projectCode||'')+' '+(r.workDetails||'')+' '+(r.employeeName||'')+' '+(r.employeeCode||'')).toLowerCase();
+      if(hay.indexOf(q)===-1)return;
+    }
+    list.push({id:id,r:r});
+  });
+  list.sort(function(a,b){return (b.r.timestamp||0)-(a.r.timestamp||0)});
+  return list;
+}
+function projWorkCard(id,r){
+  var done=r.status==='completed';
+  var when=(r.createdDate?fD(r.createdDate):'')+' '+(r.createdTime||'');
+  var btn=(!done&&CU&&r.employeeId===CU.uid)?'<div class="cmd-actions"><button type="button" class="bsc bsc-p" data-act="rdone" data-id="'+id+'"><i class="fas fa-check"></i> Mark completed</button></div>':'';
+  var fin=done&&r.completedDate?'<span><i class="fas fa-check"></i> '+fD(r.completedDate)+' '+(r.completedTime||'')+'</span>':'';
+  return '<article class="cmd-card '+(done?'normal':'high')+'" data-report="'+id+'"><div class="cmd-card-main"><div class="cmd-card-title-row"><h6>'+escH(r.projectName||'Project work')+'</h6><span class="pr-pill pr-'+(done?'normal':'high')+'">'+(done?'Done':'Pending')+'</span></div><div class="cmd-details">'+escH(r.workDetails||'')+'</div><div class="cmd-meta"><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+(r.projectCode?' · '+escH(r.projectCode):'')+'</span><span><i class="fas fa-calendar"></i> '+escH(when.trim())+'</span><span><i class="fas fa-user"></i> '+escH(r.employeeName||'')+'</span>'+fin+'</div>'+btn+'</div></article>';
+}
 function renEmpCmd(){
   if(empDragState){empRenderPending=true;return}
   var board=document.getElementById('empBoard');if(!board)return;
@@ -960,17 +990,28 @@ function renEmpCmd(){
   var keep=null;
   if(focus&&focus.classList&&focus.classList.contains('emp-note'))keep={id:focus.getAttribute('data-note-for'),value:focus.value,sel:focus.selectionStart};
   function col(kind,uid,title,sub,iconHtml,items,empty){
-    var html='<section class="cmd-col" data-kind="'+kind+'" data-uid="'+(uid||'')+'"><div class="cmd-col-h">'+iconHtml+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
-    if(!items.length)html+='<div class="cmd-empty">'+empty+'</div>';
+    var reps=kind==='emp'?projWorks(uid,false):[];
+    var n=items.length+reps.length;
+    var html='<section class="cmd-col" data-kind="'+kind+'" data-uid="'+(uid||'')+'"><div class="cmd-col-h">'+iconHtml+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+n+'</span></div><div class="cmd-col-b">';
+    if(!n)html+='<div class="cmd-empty">'+empty+'</div>';
     items.forEach(function(item){html+=empBoardCard(item.id,item.w)});
+    reps.forEach(function(item){html+=projWorkCard(item.id,item.r)});
     return html+'</div></section>';
   }
   var pool=empColTickets('pool','');
   var html=col('pool','','Open for everyone','Not assigned','<div class="cmd-pool-ic"><i class="fas fa-users"></i></div>',pool,'Drop your own ticket here to open it for everyone.');
+  var seenPeople={};
   empPeople().forEach(function(person){
+    seenPeople[person.uid]=1;
     var items=empColTickets('emp',person.uid);
     var mine=person.uid===CU.uid;
     html+=col('emp',person.uid,mine?'My work':person.name,mine?'Your tickets':person.code,'<div class="cmd-av">'+ini(person.name)+'</div>',items,mine?'Tickets you are doing show here.':'Drop your own ticket here to give it to '+escH(person.name)+'.');
+  });
+  Object.keys(allR).forEach(function(id){
+    var r=allR[id];
+    if(!isProjectReport(r)||r.status==='completed'||!r.employeeId||seenPeople[r.employeeId])return;
+    seenPeople[r.employeeId]=1;
+    html+=col('emp',r.employeeId,r.employeeName||'Employee',r.employeeCode||'Project work','<div class="cmd-av">'+ini(r.employeeName||'Employee')+'</div>',[],'');
   });
   adminPeople().forEach(function(person){
     var items=empColTickets('admin',person.uid);
@@ -989,7 +1030,9 @@ function renEmpCmd(){
   adminPeople().forEach(function(person){jhtml+='<option value="admin:'+person.uid+'">Admin · '+escH(person.name)+'</option>'});
   jump.innerHTML=jhtml;
   if(Array.prototype.some.call(jump.options,function(o){return o.value===jv}))jump.value=jv;
-  document.getElementById('empDoneLabel').textContent='Show completed ('+Object.keys(aC).filter(function(id){return aC[id]&&aC[id].status==='completed'}).length+')';
+  var doneReports=0;
+  Object.keys(allR).forEach(function(id){var r=allR[id];if(isProjectReport(r)&&r.status==='completed')doneReports++});
+  document.getElementById('empDoneLabel').textContent='Show completed ('+(Object.keys(aC).filter(function(id){return aC[id]&&aC[id].status==='completed'}).length+doneReports)+')';
   var show=document.getElementById('empShowDone').checked;
   document.getElementById('empDoneWrap').style.display=show?'block':'none';
   renEmpDone();
@@ -1015,10 +1058,13 @@ function empDoneOf(kind,uid){
 function renEmpDone(){
   var board=document.getElementById('empDoneList');if(!board)return;
   var sl=board.scrollLeft||0;
-  function col(title,sub,icon,items){
-    var html='<section class="cmd-col"><div class="cmd-col-h">'+icon+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
-    if(!items.length)html+='<div class="cmd-empty">No completed tickets</div>';
+  function col(title,sub,icon,items,reps){
+    reps=reps||[];
+    var n=items.length+reps.length;
+    var html='<section class="cmd-col"><div class="cmd-col-h">'+icon+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+n+'</span></div><div class="cmd-col-b">';
+    if(!n)html+='<div class="cmd-empty">No completed tickets</div>';
     items.forEach(function(item){html+=empDoneCard(item.id,item.w)});
+    reps.forEach(function(item){html+=projWorkCard(item.id,item.r)});
     return html+'</div></section>';
   }
   var html='';
@@ -1026,7 +1072,7 @@ function renEmpDone(){
   empPeople().forEach(function(person){
     seen[person.uid]=1;
     var mine=person.uid===CU.uid;
-    html+=col(mine?'My work':person.name,mine?'Your completed tickets':(person.code||'Employee'),'<div class="cmd-av">'+ini(person.name)+'</div>',empDoneOf('emp',person.uid));
+    html+=col(mine?'My work':person.name,mine?'Your completed tickets':(person.code||'Employee'),'<div class="cmd-av">'+ini(person.name)+'</div>',empDoneOf('emp',person.uid),projWorks(person.uid,true));
   });
   var seenAdmin={};
   adminPeople().forEach(function(person){
@@ -1043,8 +1089,14 @@ function renEmpDone(){
       html+=col(w.assignedName||'Admin','Admin · completed','<div class="cmd-av">'+ini(w.assignedName||'Admin')+'</div>',empDoneOf('admin',aid));
     }else if(w.assignedTo&&!seen[w.assignedTo]){
       seen[w.assignedTo]=1;
-      html+=col(w.assignedName||'Employee',w.assignedCode||'Employee','<div class="cmd-av">'+ini(w.assignedName||'Employee')+'</div>',empDoneOf('emp',w.assignedTo));
+      html+=col(w.assignedName||'Employee',w.assignedCode||'Employee','<div class="cmd-av">'+ini(w.assignedName||'Employee')+'</div>',empDoneOf('emp',w.assignedTo),projWorks(w.assignedTo,true));
     }
+  });
+  Object.keys(allR).forEach(function(id){
+    var r=allR[id];
+    if(!isProjectReport(r)||r.status!=='completed'||!r.employeeId||seen[r.employeeId])return;
+    seen[r.employeeId]=1;
+    html+=col(r.employeeName||'Employee',r.employeeCode||'Project work','<div class="cmd-av">'+ini(r.employeeName||'Employee')+'</div>',[],projWorks(r.employeeId,true));
   });
   var loose=empDoneOf('pool','');
   if(loose.length)html=col('No one assigned','Completed without a person','<div class="cmd-pool-ic"><i class="fas fa-users"></i></div>',loose)+html;

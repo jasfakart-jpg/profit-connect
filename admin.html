@@ -513,7 +513,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
       <!-- COMMAND WORKS -->
       <div id="pg-cmd" class="page active">
         <div class="cmd-toolbar">
-          <p class="cmd-hint">Drag a ticket by the grip onto an employee, or tap Assign. A free ticket that is not assigned is visible to every employee. A project ticket is visible only to the people already assigned to that project. Choose “I will do this” to tag a ticket to yourself. Other admins can monitor that progress.</p>
+          <p class="cmd-hint">Drag a ticket by the grip onto an employee, or tap Assign. A free ticket that is not assigned is visible to every employee. A project ticket is visible only to the people already assigned to that project. Project work an employee submits also shows in that person’s column. Choose “I will do this” to tag a ticket to yourself. Other admins can monitor that progress.</p>
           <button type="button" class="bsc bsc-p cmd-new-btn" onclick="openCmdM()"><i class="fas fa-plus"></i> New Common Work</button>
         </div>
         <div class="cmd-tools">
@@ -770,6 +770,7 @@ function loadD(){
     if(curPage==='pg-feed')renFeed();
     if(curPage==='pg-hist')renHist();
     if(curPage==='pg-track')renTrack();
+    if(curPage==='pg-cmd')renCmd();
   });
   db.ref('commonWorks').on('value',function(s){
     aC=s.val()||{};updCmdNav();
@@ -1442,6 +1443,33 @@ function cmdSort(list){
   });
   return list;
 }
+function isProjectReport(r){
+  if(!r||!r.employeeId)return false;
+  if(r.source==='common'||r.commonWorkId||r.projectCode==='COMMON'||r.projectId==='common')return false;
+  return !!(r.projectId||r.projectName);
+}
+function projWorks(uid,done,q){
+  var list=[];
+  Object.keys(aR).forEach(function(id){
+    var r=aR[id];
+    if(!isProjectReport(r)||r.employeeId!==uid)return;
+    var isDone=r.status==='completed';
+    if(done?!isDone:isDone)return;
+    if(q){
+      var hay=((r.projectName||'')+' '+(r.projectCode||'')+' '+(r.workDetails||'')+' '+(r.employeeName||'')+' '+(r.employeeCode||'')).toLowerCase();
+      if(hay.indexOf(q)===-1)return;
+    }
+    list.push({id:id,r:r});
+  });
+  list.sort(function(a,b){return (b.r.timestamp||0)-(a.r.timestamp||0)});
+  return list;
+}
+function projWorkCard(id,r){
+  var done=r.status==='completed';
+  var when=(r.createdDate?fD(r.createdDate):'')+' '+(r.createdTime||'');
+  var fin=done&&r.completedDate?'<span><i class="fas fa-check"></i> '+fD(r.completedDate)+' '+(r.completedTime||'')+'</span>':'';
+  return '<article class="cmd-card '+(done?'normal':'high')+'" data-report="'+id+'"><div class="cmd-card-main"><div class="cmd-card-title-row"><h6>'+escH(r.projectName||'Project work')+'</h6><span class="pr-pill pr-'+(done?'normal':'high')+'">'+(done?'Done':'Pending')+'</span></div><div class="cmd-details">'+escH(r.workDetails||'')+'</div><div class="cmd-meta"><span><i class="fas fa-folder"></i> '+escH(r.projectName||'')+(r.projectCode?' · '+escH(r.projectCode):'')+'</span><span><i class="fas fa-calendar"></i> '+escH(when.trim())+'</span><span><i class="fas fa-user"></i> '+escH(r.employeeName||'')+'</span>'+fin+'</div></div></article>';
+}
 function cmdActive(empUid,q){
   var list=[];
   Object.keys(aC).forEach(function(id){
@@ -1640,12 +1668,26 @@ function renCmd(){
     items.forEach(function(item){html+=cmdSelfCardHtml(item.id,item.w)});
     html+='</div></section>';
   });
+  var seenEmpCol={};
   empEntries().forEach(function(entry){
     var uid=entry[0],emp=entry[1];
+    seenEmpCol[uid]=1;
     var items=cmdActive(uid,q);
-    html+='<section class="cmd-col" data-emp="'+uid+'"><div class="cmd-col-h"><div class="cmd-av">'+ini(emp.fullName||'E')+'</div><div style="min-width:0"><div class="cmd-col-h-t">'+escH(emp.fullName||'Employee')+'</div><div class="cmd-col-sub">'+escH(emp.employeeId||'')+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
-    if(!items.length)html+='<div class="cmd-empty">Drop a ticket here to assign '+escH(emp.fullName||'this employee')+'.</div>';
+    var reps=projWorks(uid,false,q);
+    var n=items.length+reps.length;
+    html+='<section class="cmd-col" data-emp="'+uid+'"><div class="cmd-col-h"><div class="cmd-av">'+ini(emp.fullName||'E')+'</div><div style="min-width:0"><div class="cmd-col-h-t">'+escH(emp.fullName||'Employee')+'</div><div class="cmd-col-sub">'+escH(emp.employeeId||'')+'</div></div><span class="cmd-count">'+n+'</span></div><div class="cmd-col-b">';
+    if(!n)html+='<div class="cmd-empty">Drop a ticket here to assign '+escH(emp.fullName||'this employee')+'.</div>';
     items.forEach(function(item){html+=cmdCardHtml(item.id,item.w)});
+    reps.forEach(function(item){html+=projWorkCard(item.id,item.r)});
+    html+='</div></section>';
+  });
+  Object.keys(aR).forEach(function(id){
+    var r=aR[id];
+    if(!isProjectReport(r)||r.status==='completed'||!r.employeeId||seenEmpCol[r.employeeId])return;
+    seenEmpCol[r.employeeId]=1;
+    var reps=projWorks(r.employeeId,false,q);
+    html+='<section class="cmd-col" data-emp="'+r.employeeId+'"><div class="cmd-col-h"><div class="cmd-av">'+ini(r.employeeName||'E')+'</div><div style="min-width:0"><div class="cmd-col-h-t">'+escH(r.employeeName||'Employee')+'</div><div class="cmd-col-sub">'+escH(r.employeeCode||'Project work')+'</div></div><span class="cmd-count">'+reps.length+'</span></div><div class="cmd-col-b">';
+    reps.forEach(function(item){html+=projWorkCard(item.id,item.r)});
     html+='</div></section>';
   });
   board.innerHTML=html;
@@ -1660,7 +1702,9 @@ function renCmd(){
   empEntries().forEach(function(entry){jhtml+='<option value="'+entry[0]+'">'+escH(entry[1].fullName||'Employee')+'</option>'});
   jump.innerHTML=jhtml;
   if(Array.prototype.some.call(jump.options,function(o){return o.value===jv}))jump.value=jv;
-  document.getElementById('cmdDoneLabel').textContent='Show completed ('+Object.values(aC).filter(function(w){return w&&w.status==='completed'}).length+')';
+  var doneReports=0;
+  Object.keys(aR).forEach(function(id){var r=aR[id];if(isProjectReport(r)&&r.status==='completed')doneReports++});
+  document.getElementById('cmdDoneLabel').textContent='Show completed ('+(Object.values(aC).filter(function(w){return w&&w.status==='completed'}).length+doneReports)+')';
   var show=document.getElementById('cmdShowDone').checked;
   document.getElementById('cmdDoneWrap').style.display=show?'block':'none';
   renCmdDone(q);
@@ -1691,10 +1735,13 @@ function cmdDoneOf(kind,uid,q){
 function renCmdDone(q){
   var board=document.getElementById('cmdDoneList');if(!board)return;
   var sl=board.scrollLeft||0;
-  function col(title,sub,icon,items){
-    var html='<section class="cmd-col"><div class="cmd-col-h">'+icon+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+items.length+'</span></div><div class="cmd-col-b">';
-    if(!items.length)html+='<div class="cmd-empty">No completed tickets</div>';
+  function col(title,sub,icon,items,reps){
+    reps=reps||[];
+    var n=items.length+reps.length;
+    var html='<section class="cmd-col"><div class="cmd-col-h">'+icon+'<div style="min-width:0"><div class="cmd-col-h-t">'+escH(title)+'</div><div class="cmd-col-sub">'+escH(sub)+'</div></div><span class="cmd-count">'+n+'</span></div><div class="cmd-col-b">';
+    if(!n)html+='<div class="cmd-empty">No completed tickets</div>';
     items.forEach(function(item){html+=cmdDoneCard(item.id,item.w)});
+    reps.forEach(function(item){html+=projWorkCard(item.id,item.r)});
     return html+'</div></section>';
   }
   var html='';
@@ -1724,8 +1771,14 @@ function renCmdDone(q){
     seenEmp[w.assignedTo]=1;
     emps.push({uid:w.assignedTo,name:w.assignedName||'Employee',code:w.assignedCode||''});
   });
+  Object.keys(aR).forEach(function(id){
+    var r=aR[id];
+    if(!isProjectReport(r)||r.status!=='completed'||!r.employeeId||seenEmp[r.employeeId])return;
+    seenEmp[r.employeeId]=1;
+    emps.push({uid:r.employeeId,name:r.employeeName||'Employee',code:r.employeeCode||''});
+  });
   emps.forEach(function(person){
-    html+=col(person.name,person.code||'Employee','<div class="cmd-av">'+ini(person.name)+'</div>',cmdDoneOf('emp',person.uid,q));
+    html+=col(person.name,person.code||'Employee','<div class="cmd-av">'+ini(person.name)+'</div>',cmdDoneOf('emp',person.uid,q),projWorks(person.uid,true,q));
   });
   var loose=cmdDoneOf('pool','',q);
   if(loose.length)html=col('No one assigned','Completed without a person','<div class="cmd-pool-ic"><i class="fas fa-users"></i></div>',loose)+html;
