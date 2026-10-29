@@ -99,19 +99,19 @@ h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}a{text-decorat
 .assign-who{display:flex;align-items:center;gap:.65rem;min-width:0;text-align:left}
 .assign-who strong{display:block;font-size:.95rem}
 .assign-who small{display:block;color:var(--text-sec);font-size:.75rem}
-.assign-count{display:inline-flex;align-items:center;margin-top:.2rem;background:rgba(13,148,136,.12);color:var(--primary);border-radius:999px;min-height:22px;padding:0 .5rem;font-size:.72rem;font-weight:800}
-.assign-proj{display:flex;align-items:center;gap:.75rem;padding:.45rem 0;border-top:1px solid var(--border);min-height:52px}
-.assign-proj:first-child{border-top:none}
-.assign-proj-meta{flex:1;min-width:0;text-align:left}
-.assign-proj-meta strong{display:block;font-size:.9rem}
-.assign-proj-meta small{display:block;color:var(--text-sec);font-size:.75rem}
-#assignTB .assign-cell{min-width:280px}
-.assign-sw{position:relative;width:52px;height:32px;flex-shrink:0}
+.assign-count{display:inline-flex;align-items:center;margin-top:.15rem;background:rgba(13,148,136,.12);color:var(--primary);border-radius:999px;min-height:18px;padding:0 .45rem;font-size:.68rem;font-weight:800}
+#assignTB td{vertical-align:middle}
+#assignTB .assign-cell{min-width:0}
+.assign-grid{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;justify-content:flex-start}
+.assign-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--border);border-radius:999px;padding:.15rem .28rem .15rem .55rem;background:var(--bg);max-width:100%}
+.assign-chip:has(input:checked){border-color:var(--primary);background:rgba(13,148,136,.08)}
+.assign-chip-name{font-size:.75rem;font-weight:700;line-height:1.2;white-space:nowrap}
+.assign-sw{position:relative;width:34px;height:18px;flex-shrink:0}
 .assign-sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
 .assign-sw span{position:absolute;inset:0;border-radius:16px;background:var(--border);transition:background .2s}
-.assign-sw span::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.assign-sw span::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .assign-sw input:checked+span{background:var(--primary)}
-.assign-sw input:checked+span::after{transform:translateX(20px)}
+.assign-sw input:checked+span::after{transform:translateX(16px)}
 .assign-sw input:focus-visible+span{box-shadow:0 0 0 3px rgba(13,148,136,.35)}
 .theme-tgl{position:relative;width:48px;height:26px;border-radius:13px;background:var(--border);border:none;cursor:pointer;transition:background .3s}
 .theme-tgl::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
@@ -1342,8 +1342,10 @@ function renAssign(){
       var n=assignCount(e.uid);
       var list=shown.map(function(p){
         var on=!!assignIdFor(e.uid,p.id);
-        return '<div class="assign-proj"><div class="assign-proj-meta"><strong>'+escH(p.name)+'</strong><small>'+escH(p.code)+(p.status?' · '+escH(p.status):'')+'</small></div><label class="assign-sw"><input type="checkbox" data-emp="'+e.uid+'" data-proj="'+p.id+'"'+(on?' checked':'')+' aria-label="Assign '+escH(p.name)+' to '+escH(e.name)+'"><span></span></label></div>';
+        var tip=escH(p.name)+(p.code?' · '+escH(p.code):'')+(p.status?' · '+escH(p.status):'');
+        return '<label class="assign-chip" title="'+tip+'"><span class="assign-chip-name">'+escH(p.name)+'</span><span class="assign-sw"><input type="checkbox" data-emp="'+e.uid+'" data-proj="'+p.id+'"'+(on?' checked':'')+' aria-label="Assign '+escH(p.name)+' to '+escH(e.name)+'"><span></span></span></label>';
       }).join('')||'<div class="cmd-empty">No project matches these filters.</div>';
+      list='<div class="assign-grid">'+list+'</div>';
       return '<tr><td><div class="assign-who"><div class="cmd-av">'+ini(e.name)+'</div><div><strong>'+escH(e.name)+'</strong><small>'+escH(e.dept||e.role||'Employee')+'</small><span class="assign-count">'+n+' on</span></div></div></td><td><code>'+escH(e.code||'-')+'</code></td><td class="assign-cell">'+list+'</td></tr>';
     }).join('');
   }
