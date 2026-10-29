@@ -13,7 +13,20 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 :root{--primary:#0D9488;--primary-dark:#0F766E;--secondary:#059669;--accent:#F59E0B;--danger:#EF4444;--success:#10B981;--bg:#F1F5F9;--bg-card:#fff;--bg-sidebar:#fff;--text:#0F172A;--text-sec:#64748B;--border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.08);--sw:260px}
-[data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--bg-sidebar:#111827;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
+[data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--bg-sidebar:#111827;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3);--bs-body-bg:#0B1120;--bs-body-color:#F1F5F9;--bs-emphasis-color:#F1F5F9;--bs-secondary-color:#94A3B8;--bs-tertiary-color:#94A3B8;--bs-secondary-bg:#1E293B;--bs-tertiary-bg:#111827;--bs-border-color:#334155;--bs-heading-color:#F1F5F9}
+[data-theme="dark"] .table{--bs-table-bg:var(--bg-card);--bs-table-color:var(--text);--bs-table-border-color:var(--border);--bs-table-accent-bg:transparent;color:var(--text)}
+[data-theme="dark"] .table > :not(caption) > * > *{background-color:var(--bg-card) !important;color:var(--text) !important;box-shadow:none !important;border-color:var(--border)}
+[data-theme="dark"] .table thead th{background-color:var(--bg) !important;color:var(--text-sec) !important}
+[data-theme="dark"] .form-control,[data-theme="dark"] .form-select,[data-theme="dark"] textarea,[data-theme="dark"] .form-control:focus,[data-theme="dark"] .form-select:focus{background-color:var(--bg) !important;color:var(--text) !important;border-color:var(--border) !important}
+[data-theme="dark"] .form-control::placeholder{color:var(--text-sec)}
+[data-theme="dark"] .form-select{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23F1F5F9' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e")}
+[data-theme="dark"] .modal-content,[data-theme="dark"] .dropdown-menu,[data-theme="dark"] .list-group-item{background-color:var(--bg-card);color:var(--text);border-color:var(--border)}
+[data-theme="dark"] .modal-header,[data-theme="dark"] .modal-footer{border-color:var(--border);background:transparent;color:var(--text)}
+[data-theme="dark"] .btn-close{filter:invert(1) grayscale(1)}
+[data-theme="dark"] .page-link{background:var(--bg-card);color:var(--text);border-color:var(--border)}
+[data-theme="dark"] code{color:#5EEAD4;background:transparent}
+[data-theme="dark"] .bs-pending{color:#FCA5A5}
+[data-theme="dark"] .bs-done,[data-theme="dark"] .bs-active{color:#6EE7B7}
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;overflow-x:hidden}
 h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}a{text-decoration:none;color:inherit}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
@@ -414,8 +427,9 @@ function ini(n){return n?n.split(' ').map(function(w){return w[0]}).join('').toU
 function fD(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d}
 function fDt(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+' '+MN[parseInt(p[1])-1]+' '+p[0]:d}
 function escH(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
-function togTheme(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('ptdc-theme',n);renChart()}
-var sv=localStorage.getItem('ptdc-theme');if(sv)document.documentElement.setAttribute('data-theme',sv);
+function applyTheme(mode){var h=document.documentElement;h.setAttribute('data-theme',mode);h.setAttribute('data-bs-theme',mode==='dark'?'dark':'light')}
+function togTheme(){var n=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';applyTheme(n);localStorage.setItem('ptdc-theme',n);renChart()}
+var sv=localStorage.getItem('ptdc-theme');if(sv)applyTheme(sv);
 
 /* === NAV === */
 function nav(el,pid){

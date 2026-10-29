@@ -12,7 +12,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 :root{--primary:#0D9488;--primary-dark:#0F766E;--secondary:#059669;--accent:#F59E0B;--danger:#EF4444;--bg:#F1F5F9;--bg-card:#fff;--text:#0F172A;--text-sec:#64748B;--border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.08)}
-[data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3)}
+[data-theme="dark"]{--bg:#0B1120;--bg-card:#1E293B;--text:#F1F5F9;--text-sec:#94A3B8;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3);--bs-body-bg:#0B1120;--bs-body-color:#F1F5F9;--bs-border-color:#334155}
+[data-theme="dark"] .form-control,[data-theme="dark"] .form-select,[data-theme="dark"] .form-control:focus,[data-theme="dark"] .form-select:focus{background-color:var(--bg) !important;color:var(--text) !important;border-color:var(--border) !important}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
 h1,h2,h3{font-family:'Outfit',sans-serif;font-weight:700}
@@ -109,7 +110,7 @@ async function handleRegister(){
     setTimeout(function(){window.location.href='index.html'},1000);
   }catch(err){hideL();toast(err.message,'error')}
 }
-var sv=localStorage.getItem('ptdc-theme');if(sv)document.documentElement.setAttribute('data-theme',sv);
+var sv=localStorage.getItem('ptdc-theme');if(sv){document.documentElement.setAttribute('data-theme',sv);document.documentElement.setAttribute('data-bs-theme',sv==='dark'?'dark':'light')}
 </script>
 </body>
 </html>
