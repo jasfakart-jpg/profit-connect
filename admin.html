@@ -96,6 +96,27 @@ h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}a{text-decorat
 .loading-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(2px)}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.assign-emps{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
+.assign-emp{display:flex;align-items:center;gap:.75rem;width:100%;text-align:left;border:1px solid var(--border);background:var(--bg-card);color:var(--text);border-radius:14px;padding:.7rem .85rem;cursor:pointer;min-height:64px}
+.assign-emp.active{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.16)}
+.assign-emp-meta{flex:1;min-width:0}
+.assign-emp-meta strong{display:block;font-size:.95rem}
+.assign-emp-meta small{display:block;color:var(--text-sec);font-size:.75rem}
+.assign-count{flex-shrink:0;background:rgba(13,148,136,.12);color:var(--primary);border-radius:999px;min-width:52px;height:28px;padding:0 .55rem;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800}
+.assign-projs{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:.35rem 1rem  .5rem}
+.assign-projs h6{margin:.85rem 0 .15rem;font-weight:800}
+.assign-projs p{margin:0 0 .35rem;color:var(--text-sec);font-size:.82rem}
+.assign-proj{display:flex;align-items:center;gap:.75rem;padding:.7rem 0;border-top:1px solid var(--border);min-height:64px}
+.assign-proj-meta{flex:1;min-width:0}
+.assign-proj-meta strong{display:block;font-size:.92rem}
+.assign-proj-meta small{display:block;color:var(--text-sec);font-size:.75rem}
+.assign-sw{position:relative;width:52px;height:32px;flex-shrink:0}
+.assign-sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
+.assign-sw span{position:absolute;inset:0;border-radius:16px;background:var(--border);transition:background .2s}
+.assign-sw span::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.assign-sw input:checked+span{background:var(--primary)}
+.assign-sw input:checked+span::after{transform:translateX(20px)}
+.assign-sw input:focus-visible+span{box-shadow:0 0 0 3px rgba(13,148,136,.35)}
 .theme-tgl{position:relative;width:48px;height:26px;border-radius:13px;background:var(--border);border:none;cursor:pointer;transition:background .3s}
 .theme-tgl::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 [data-theme="dark"] .theme-tgl{background:var(--primary)}[data-theme="dark"] .theme-tgl::after{transform:translateX(22px)}
@@ -461,11 +482,12 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 
       <!-- ASSIGNMENTS -->
       <div id="pg-assign" class="page">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">
-          <input type="text" class="form-control" id="sAssign" placeholder="Search..." style="max-width:260px" oninput="renAssign()">
-          <button class="bsc bsc-p" style="padding:.5rem 1.2rem" onclick="openAssignM()"><i class="fas fa-plus"></i> Assign Project</button>
-        </div>
-        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Employee</th><th>ID</th><th>Project</th><th>Date</th><th>Actions</th></tr></thead><tbody id="assignTB"></tbody></table></div><div id="assignE" class="empty-s" style="display:none"><i class="fas fa-user-check"></i><p>No assignments</p></div><div class="pag-w" id="assignPag"></div></div>
+        <p style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Pick an employee. The projects sit underneath. Turn a project on to assign it, or off to remove it. Past work stays.</p>
+        <input type="search" class="form-control" id="sAssign" placeholder="Search employee or project" style="max-width:420px;min-height:44px;margin-bottom:1rem" oninput="renAssign()" autocomplete="off">
+        <h6 style="font-weight:800;margin:0 0 .55rem">Employees</h6>
+        <div id="assignEmps" class="assign-emps"></div>
+        <div id="assignE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees yet</p></div>
+        <div id="assignProjs" class="assign-projs"></div>
       </div>
 
       <!-- REPORTS -->
@@ -562,17 +584,6 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-12"><label class="form-label" style="font-size:.85rem;font-weight:600">Description</label><textarea class="form-control" id="pDe" rows="3"></textarea></div>
   </div></div>
   <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem" onclick="saveProj()">Save</button></div>
-</div></div></div>
-
-<!-- Assign Modal -->
-<div class="modal fade" id="assignModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">Assign Project</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-  <div class="modal-body">
-    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Employee *</label><select class="form-select" id="aEmp"></select></div>
-    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Project *</label><select class="form-select" id="aProj"></select></div>
-    <div class="mb-3"><label class="form-label" style="font-size:.85rem;font-weight:600">Date</label><input type="date" class="form-control" id="aDt"></div>
-  </div>
-  <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem" onclick="saveAssign()">Assign</button></div>
 </div></div></div>
 
 <div class="modal fade" id="empModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
@@ -747,8 +758,8 @@ function initDash(){
 }
 
 function loadD(){
-  db.ref('projects').on('value',function(s){aP=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-proj')renProj();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed()});
-  db.ref('employees').on('value',function(s){aE=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-emp')renEmp();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed();if(curPage==='pg-cmd')renCmd();if(curPage==='pg-hist')renHist()});
+  db.ref('projects').on('value',function(s){aP=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-proj')renProj();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed();if(curPage==='pg-assign')renAssign()});
+  db.ref('employees').on('value',function(s){aE=s.val()||{};if(curPage==='pg-dash')renDash();if(curPage==='pg-emp')renEmp();if(curPage==='pg-rep')renRep();if(curPage==='pg-feed')renFeed();if(curPage==='pg-cmd')renCmd();if(curPage==='pg-hist')renHist();if(curPage==='pg-assign')renAssign()});
   db.ref('assignments').on('value',function(s){aA=s.val()||{};if(curPage==='pg-assign')renAssign();if(curPage==='pg-dash')renDash();if(curPage==='pg-cmd')renCmd()});
   db.ref('admins').on('value',function(s){
     aAdmins=s.val()||{};
@@ -1255,28 +1266,93 @@ function renHist(){
 function goHist(p){histPg=Math.max(1,p);renHist()}
 
 /* ===== ASSIGNMENTS ===== */
-function openAssignM(){
-  var es=document.getElementById('aEmp');es.innerHTML='<option value="">Select Employee</option>';
-  Object.entries(aE).forEach(function(e){es.innerHTML+='<option value="'+e[0]+'" data-n="'+escH(e[1].fullName)+'" data-eid="'+escH(e[1].employeeId)+'">'+escH(e[1].fullName)+' ('+escH(e[1].employeeId)+')</option>'});
-  var ps=document.getElementById('aProj');ps.innerHTML='<option value="">Select Project</option>';
-  Object.entries(aP).forEach(function(e){ps.innerHTML+='<option value="'+e[0]+'" data-n="'+escH(e[1].name)+'">'+escH(e[1].name)+' ('+escH(e[1].code)+')</option>'});
-  document.getElementById('aDt').value=tS();new bootstrap.Modal(document.getElementById('assignModal')).show();
+var assignPick='';
+var assignBusy=false;
+function assignIdFor(empUid,projId){
+  var found='';
+  Object.keys(aA).forEach(function(id){
+    var a=aA[id];
+    if(a&&a.employeeId===empUid&&a.projectId===projId)found=id;
+  });
+  return found;
 }
-async function saveAssign(){
-  var eid=document.getElementById('aEmp').value,pid=document.getElementById('aProj').value,dt=document.getElementById('aDt').value;
-  if(!eid||!pid){T('Select employee and project','error');return}
-  if(Object.values(aA).some(function(a){return a.employeeId===eid&&a.projectId===pid})){T('Already assigned','error');return}
-  var eo=document.getElementById('aEmp').selectedOptions[0],po=document.getElementById('aProj').selectedOptions[0];
-  sL();try{await db.ref('assignments/'+gId()).set({employeeId:eid,employeeName:eo.dataset.n||'',employeeCode:eo.dataset.eid||'',projectId:pid,projectName:po.dataset.n||'',assignedDate:dt,createdAt:Date.now()});bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();hL();T('Assigned','success')}catch(e){hL();T(e.message,'error')}}
-function rmAssign(id){var a=aA[id];document.getElementById('cfmT').textContent='Remove Assignment?';document.getElementById('cfmM').textContent='Remove '+(a?.employeeName||'')+'?';document.getElementById('cfmB').onclick=async function(){sL();try{await db.ref('assignments/'+id).remove();bootstrap.Modal.getInstance(document.getElementById('cfmModal')).hide();hL();T('Removed','success')}catch(e){hL();T(e.message,'error')}};new bootstrap.Modal(document.getElementById('cfmModal')).show()}
+function assignCount(empUid){
+  var n=0;
+  Object.values(aA).forEach(function(a){if(a&&a.employeeId===empUid&&a.projectId)n++});
+  return n;
+}
+function pickAssign(uid){assignPick=uid;renAssign()}
 function renAssign(){
-  var s=(document.getElementById('sAssign').value||'').toLowerCase();
-  var l=Object.entries(aA).filter(function(e){var a=e[1];return!s||(a.employeeName||'').toLowerCase().includes(s)||(a.projectName||'').toLowerCase().includes(s)});
-  var t=l.length;l=pg(l,aPg,PS);var tb=document.getElementById('assignTB'),em=document.getElementById('assignE');
-  if(!t){tb.innerHTML='';em.style.display='block'}else{em.style.display='none';tb.innerHTML=l.map(function(e){var id=e[0],a=e[1];return '<tr><td><strong>'+escH(a.employeeName||'')+'</strong></td><td><code>'+escH(a.employeeCode||'')+'</code></td><td>'+escH(a.projectName||'')+'</td><td>'+fD(a.assignedDate)+'</td><td><div class="ta"><button class="bd" onclick="rmAssign(\''+id+'\')"><i class="fas fa-trash"></i></button></div></td></tr>'}).join('')}
-  pgH('assignPag',t,aPg,'goAP');
+  var host=document.getElementById('assignEmps');
+  var box=document.getElementById('assignProjs');
+  var empty=document.getElementById('assignE');
+  if(!host||!box)return;
+  var q=(document.getElementById('sAssign').value||'').trim().toLowerCase();
+  var emps=Object.keys(aE).map(function(uid){
+    var e=aE[uid]||{};
+    return {uid:uid,name:e.fullName||'Employee',code:e.employeeId||''};
+  }).sort(function(a,b){return a.name.localeCompare(b.name)});
+  var projects=Object.keys(aP).map(function(id){
+    var p=aP[id]||{};
+    return {id:id,name:p.name||'Project',code:p.code||'',status:p.status||''};
+  }).sort(function(a,b){return a.name.localeCompare(b.name)});
+  var empHits=emps.filter(function(e){return !q||(e.name+' '+e.code).toLowerCase().indexOf(q)!==-1});
+  var projHits=projects.filter(function(p){return !q||(p.name+' '+p.code).toLowerCase().indexOf(q)!==-1});
+  if(!empHits.length&&projHits.length)empHits=emps;
+  if(!projHits.length&&empHits.length)projHits=projects;
+  if(!emps.length){
+    host.innerHTML='';
+    box.innerHTML='';
+    box.style.display='none';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  if(!assignPick||!aE[assignPick]||!empHits.some(function(e){return e.uid===assignPick}))assignPick=empHits[0]?empHits[0].uid:'';
+  host.innerHTML=empHits.map(function(e){
+    var n=assignCount(e.uid);
+    return '<button type="button" class="assign-emp'+(e.uid===assignPick?' active':'')+'" onclick="pickAssign(\''+e.uid+'\')"><div class="cmd-av">'+ini(e.name)+'</div><div class="assign-emp-meta"><strong>'+escH(e.name)+'</strong><small>'+escH(e.code||'Employee')+'</small></div><span class="assign-count">'+n+' on</span></button>';
+  }).join('')||'<div class="cmd-empty">No employee matches that search.</div>';
+  var person=aE[assignPick]||{};
+  if(!assignPick){box.style.display='none';box.innerHTML='';return}
+  box.style.display='block';
+  var rows=projHits.map(function(p){
+    var on=!!assignIdFor(assignPick,p.id);
+    return '<div class="assign-proj"><div class="assign-proj-meta"><strong>'+escH(p.name)+'</strong><small>'+escH(p.code)+(p.status?' · '+escH(p.status):'')+'</small></div><label class="assign-sw"><input type="checkbox" data-emp="'+assignPick+'" data-proj="'+p.id+'"'+(on?' checked':'')+' aria-label="Assign '+escH(p.name)+'"><span></span></label></div>';
+  }).join('');
+  box.innerHTML='<h6>Projects for '+escH(person.fullName||'employee')+'</h6><p>On assigns this project. Off removes only the assignment.</p>'+(rows||'<div class="cmd-empty">No project matches that search.</div>');
 }
-function goAP(p){aPg=Math.max(1,p);renAssign()}
+async function togAssign(box){
+  if(assignBusy){box.checked=!box.checked;return}
+  var empUid=box.getAttribute('data-emp')||'';
+  var projId=box.getAttribute('data-proj')||'';
+  var on=!!box.checked;
+  var existing=assignIdFor(empUid,projId);
+  var emp=aE[empUid]||{};
+  var proj=aP[projId]||{};
+  assignBusy=true;
+  sL();
+  try{
+    if(on){
+      if(!existing){
+        await db.ref('assignments/'+gId()).set({
+          employeeId:empUid,employeeName:emp.fullName||'',employeeCode:emp.employeeId||'',
+          projectId:projId,projectName:proj.name||'',assignedDate:tS(),createdAt:Date.now()
+        });
+      }
+      T((emp.fullName||'Employee')+' is on '+(proj.name||'this project'),'success');
+    }else if(existing){
+      await db.ref('assignments/'+existing).remove();
+      T('Assignment removed. Past work stays.','success');
+    }
+    hL();
+  }catch(err){
+    box.checked=!on;
+    hL();
+    T(err.message,'error');
+  }
+  assignBusy=false;
+}
 
 /* ===== REPORTS ===== */
 function popRepF(){
@@ -1312,6 +1388,10 @@ function bindCmdUi(){
   document.getElementById('cmdBoardWrap').addEventListener('pointerdown',onCmdPointerDown,{passive:false});
   document.getElementById('cmdBoardWrap').addEventListener('click',onCmdClick);
   document.getElementById('cmdDoneWrap').addEventListener('click',onCmdClick);
+  document.getElementById('assignProjs').addEventListener('change',function(e){
+    var box=e.target;
+    if(box&&box.matches&&box.matches('input[type="checkbox"]'))togAssign(box);
+  });
   document.getElementById('cmdEmpPick').addEventListener('click',function(e){
     var btn=e.target.closest('.cmd-pick');if(!btn||!cmdAssignId)return;
     var uid=btn.getAttribute('data-uid')||'';
