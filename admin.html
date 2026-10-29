@@ -622,7 +622,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="emMo" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Department</label><input type="text" class="form-control" id="emDp" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Designation</label><input type="text" class="form-control" id="emDs" autocomplete="off"></div>
-    <div class="col-12" id="emOldWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Previous password</label><input type="text" class="form-control" id="emOldPw" readonly autocomplete="off"><p id="emOldHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
+    <div class="col-12" id="emOldWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emOldLbl">Previous password</label><div class="pw-box"><input type="text" class="form-control" id="emOldPw" autocomplete="off"><button type="button" class="pw-eye" id="emOldEye" onclick="togPw(this)" aria-label="Show password" style="display:none"><i class="fas fa-eye"></i></button></div><p id="emOldHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
     <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPwLbl">Password *</label><div class="pw-box"><input type="password" class="form-control" id="emPw" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
     <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPw2Lbl">Confirm password *</label><div class="pw-box"><input type="password" class="form-control" id="emPw2" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
   </div></div>
@@ -636,7 +636,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Role</label><input type="text" class="form-control" id="adR" placeholder="Administrator" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Email *</label><input type="email" class="form-control" id="adEm" autocomplete="off"></div>
     <div class="col-md-6"><label class="form-label" style="font-size:.85rem;font-weight:600">Mobile</label><input type="text" class="form-control" id="adMo" autocomplete="off"></div>
-    <div class="col-12" id="adPrevWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Previous password</label><input type="text" class="form-control" id="adPrevPw" readonly autocomplete="off"><p id="adPrevHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
+    <div class="col-12" id="adPrevWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600" id="adPrevLbl">Previous password</label><div class="pw-box"><input type="text" class="form-control" id="adPrevPw" autocomplete="off"><button type="button" class="pw-eye" id="adPrevEye" onclick="togPw(this)" aria-label="Show password" style="display:none"><i class="fas fa-eye"></i></button></div><p id="adPrevHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
     <div class="col-md-6" id="adPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="adPwLbl">Password *</label><div class="pw-box"><input type="password" class="form-control" id="adPw" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
     <div class="col-md-6" id="adPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600">Confirm password</label><div class="pw-box"><input type="password" class="form-control" id="adPw2" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
     <div class="col-12" id="adResetWrap" style="display:none"><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="resetAdminPass()">Send password reset email</button><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This login has no saved password, so it cannot be replaced from here. The reset email is the way to set a new one.</p></div>
@@ -971,8 +971,18 @@ function openEmpM(id){
     document.getElementById('emPwLbl').textContent='New password';
     document.getElementById('emPw2Lbl').textContent='Confirm new password';
     document.getElementById('emOldWrap').style.display='';
-    document.getElementById('emOldPw').value=v.loginPassword||'';
-    document.getElementById('emOldHint').textContent=v.loginPassword?'This is the password saved for this login. Type a new password below to replace it. The old one is not required.':'No password was saved for this login yet, so a new password cannot replace it from here.';
+    var oldBox=document.getElementById('emOldPw'),oldEye=document.getElementById('emOldEye');
+    if(v.loginPassword){
+      document.getElementById('emOldLbl').textContent='Previous password';
+      oldBox.type='text';oldBox.readOnly=true;oldBox.value=v.loginPassword;
+      oldEye.style.display='none';
+      document.getElementById('emOldHint').textContent='This is the password saved for this login. Type a new password below to replace it. The old one is not required.';
+    }else{
+      document.getElementById('emOldLbl').textContent='Password they use now *';
+      oldBox.type='password';oldBox.readOnly=false;oldBox.value='';
+      oldEye.style.display='';oldEye.querySelector('i').className='fas fa-eye';
+      document.getElementById('emOldHint').textContent='No password is saved yet. Type the password they sign in with now, then the new password below, and press Save. It will show here next time.';
+    }
   }
   new bootstrap.Modal(document.getElementById('empModal')).show();
 }
@@ -988,11 +998,11 @@ async function saveEmp(){
   sL();
   try{
     if(eid){
-      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value,oldPass=(aE[eid]&&aE[eid].loginPassword)||'';
+      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value,oldPass=(aE[eid]&&aE[eid].loginPassword)||document.getElementById('emOldPw').value;
       if(pass||pass2){
         if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
         if(pass!==pass2){hL();T('Passwords do not match','error');return}
-        if(!oldPass){hL();T('No saved password on this account, so it cannot be replaced from here','error');return}
+        if(!oldPass){hL();T('Type the password they use now, then the new password','error');return}
         await reclaimLogin(email,oldPass,pass);
         data.loginPassword=pass;
       }
@@ -1010,7 +1020,7 @@ async function saveEmp(){
       T('Employee account created','success');
     }
     bootstrap.Modal.getInstance(document.getElementById('empModal')).hide();hL();
-  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':badPass(e.code)?'The saved password does not match this login, so it was not replaced':e.message,'error')}
+  }catch(e){hL();T(e.code==='auth/email-already-in-use'?'This email is already registered':badPass(e.code)?'The password they use now is not correct':e.message,'error')}
 }
 function makeAdmin(uid){
   var v=aE[uid];
@@ -1102,13 +1112,28 @@ function openAdminM(id){
     document.getElementById('adminMT').textContent='Edit Admin';
     var mine=CU&&id===CU.uid;
     var saved=!!v.loginPassword;
+    var prevBox=document.getElementById('adPrevPw'),prevEye=document.getElementById('adPrevEye');
     document.getElementById('adPwLbl').textContent='New password';
     document.getElementById('adPwWrap').style.display='';
     document.getElementById('adPw2Wrap').style.display='';
     document.getElementById('adPrevWrap').style.display='';
-    document.getElementById('adPrevPw').value=v.loginPassword||'';
-    document.getElementById('adPrevHint').textContent=saved?'This is the password saved for this login. Type a new password below to replace it. The old one is not required.':(mine?'Type a new password below to replace yours.':'No password was saved for this login yet, so it cannot be replaced from here.');
-    document.getElementById('adResetWrap').style.display=(!mine&&!saved)?'':'none';
+    document.getElementById('adResetWrap').style.display='none';
+    if(saved){
+      document.getElementById('adPrevLbl').textContent='Previous password';
+      prevBox.type='text';prevBox.readOnly=true;prevBox.value=v.loginPassword;
+      prevEye.style.display='none';
+      document.getElementById('adPrevHint').textContent='This is the password saved for this login. Type a new password below to replace it. The old one is not required.';
+    }else if(mine){
+      document.getElementById('adPrevLbl').textContent='Previous password';
+      prevBox.type='text';prevBox.readOnly=true;prevBox.value='';
+      prevEye.style.display='none';
+      document.getElementById('adPrevHint').textContent='Type a new password below to set yours. It will show here next time.';
+    }else{
+      document.getElementById('adPrevLbl').textContent='Password they use now *';
+      prevBox.type='password';prevBox.readOnly=false;prevBox.value='';
+      prevEye.style.display='';prevEye.querySelector('i').className='fas fa-eye';
+      document.getElementById('adPrevHint').textContent='No password is saved yet. Type the password they sign in with now, then the new password below, and press Save.';
+    }
   }
   new bootstrap.Modal(document.getElementById('adminModal')).show();
 }
@@ -1123,14 +1148,14 @@ async function saveAdmin(){
   if(pass||pass2){
     if(pass.length<6){T('Password must be at least 6 characters','error');return}
     if(pass!==pass2){T('Passwords do not match','error');return}
-    if(eid&&!(CU&&eid===CU.uid)&&!((aAdmins[eid]&&aAdmins[eid].loginPassword)||'')){T('No saved password on this admin, so it cannot be replaced from here','error');return}
+    if(eid&&!(CU&&eid===CU.uid)&&!((aAdmins[eid]&&aAdmins[eid].loginPassword)||document.getElementById('adPrevPw').value)){T('Type the password they use now, then the new password','error');return}
   }
   sL();
   try{
     if(eid){
       if(pass){
         if(CU&&eid===CU.uid)await CU.updatePassword(pass);
-        else await reclaimLogin(email,(aAdmins[eid]&&aAdmins[eid].loginPassword)||'',pass);
+        else await reclaimLogin(email,(aAdmins[eid]&&aAdmins[eid].loginPassword)||document.getElementById('adPrevPw').value,pass);
         data.loginPassword=pass;
       }
       await db.ref('admins/'+eid).update(data);
