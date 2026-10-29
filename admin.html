@@ -96,20 +96,16 @@ h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;font-weight:700}a{text-decorat
 .loading-ov{position:fixed;inset:0;background:rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:9998;backdrop-filter:blur(2px)}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.assign-emps{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
-.assign-emp{display:flex;align-items:center;gap:.75rem;width:100%;text-align:left;border:1px solid var(--border);background:var(--bg-card);color:var(--text);border-radius:14px;padding:.7rem .85rem;cursor:pointer;min-height:64px}
-.assign-emp.active{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,.16)}
-.assign-emp-meta{flex:1;min-width:0}
-.assign-emp-meta strong{display:block;font-size:.95rem}
-.assign-emp-meta small{display:block;color:var(--text-sec);font-size:.75rem}
-.assign-count{flex-shrink:0;background:rgba(13,148,136,.12);color:var(--primary);border-radius:999px;min-width:52px;height:28px;padding:0 .55rem;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800}
-.assign-projs{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:.35rem 1rem  .5rem}
-.assign-projs h6{margin:.85rem 0 .15rem;font-weight:800}
-.assign-projs p{margin:0 0 .35rem;color:var(--text-sec);font-size:.82rem}
-.assign-proj{display:flex;align-items:center;gap:.75rem;padding:.7rem 0;border-top:1px solid var(--border);min-height:64px}
-.assign-proj-meta{flex:1;min-width:0}
-.assign-proj-meta strong{display:block;font-size:.92rem}
+.assign-who{display:flex;align-items:center;gap:.65rem;min-width:0;text-align:left}
+.assign-who strong{display:block;font-size:.95rem}
+.assign-who small{display:block;color:var(--text-sec);font-size:.75rem}
+.assign-count{display:inline-flex;align-items:center;margin-top:.2rem;background:rgba(13,148,136,.12);color:var(--primary);border-radius:999px;min-height:22px;padding:0 .5rem;font-size:.72rem;font-weight:800}
+.assign-proj{display:flex;align-items:center;gap:.75rem;padding:.45rem 0;border-top:1px solid var(--border);min-height:52px}
+.assign-proj:first-child{border-top:none}
+.assign-proj-meta{flex:1;min-width:0;text-align:left}
+.assign-proj-meta strong{display:block;font-size:.9rem}
 .assign-proj-meta small{display:block;color:var(--text-sec);font-size:.75rem}
+#assignTB .assign-cell{min-width:280px}
 .assign-sw{position:relative;width:52px;height:32px;flex-shrink:0}
 .assign-sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
 .assign-sw span{position:absolute;inset:0;border-radius:16px;background:var(--border);transition:background .2s}
@@ -328,9 +324,8 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 #histTB td:nth-child(7)::before{content:"Account"}
 #assignTB td:nth-child(1)::before{content:"Employee"}
 #assignTB td:nth-child(2)::before{content:"ID"}
-#assignTB td:nth-child(3)::before{content:"Project"}
-#assignTB td:nth-child(4)::before{content:"Date"}
-#assignTB td:nth-child(5)::before{content:"Actions"}
+#assignTB td.assign-cell{display:block;text-align:left}
+#assignTB td.assign-cell::before{content:"Projects";display:block;margin:.35rem 0 .15rem;flex:none}
 #repTB td:nth-child(1)::before{content:"Date"}
 #repTB td:nth-child(2)::before{content:"Time"}
 #repTB td:nth-child(3)::before{content:"Employee"}
@@ -482,12 +477,17 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
 
       <!-- ASSIGNMENTS -->
       <div id="pg-assign" class="page">
-        <p style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Pick an employee. The projects sit underneath. Turn a project on to assign it, or off to remove it. Past work stays.</p>
-        <input type="search" class="form-control" id="sAssign" placeholder="Search employee or project" style="max-width:420px;min-height:44px;margin-bottom:1rem" oninput="renAssign()" autocomplete="off">
-        <h6 style="font-weight:800;margin:0 0 .55rem">Employees</h6>
-        <div id="assignEmps" class="assign-emps"></div>
-        <div id="assignE" class="empty-s" style="display:none"><i class="fas fa-users"></i><p>No employees yet</p></div>
-        <div id="assignProjs" class="assign-projs"></div>
+        <p style="color:var(--text-sec);font-size:.9rem;line-height:1.5;margin-bottom:.9rem">Each employee row lists every project underneath that name. Turn a project on to assign it, or off to remove it. Past work stays.</p>
+        <div class="fr">
+          <div class="fg"><label>Search</label><input type="search" class="form-control" id="sAssign" placeholder="Name, ID, or project" oninput="aPg=1;renAssign()" autocomplete="off"></div>
+          <div class="fg"><label>Employee</label><select class="form-select" id="asEmp" onchange="aPg=1;renAssign()"><option value="">All employees</option></select></div>
+          <div class="fg"><label>Project</label><select class="form-select" id="asProj" onchange="aPg=1;renAssign()"><option value="">All projects</option></select></div>
+          <div class="fg"><label>Assignment</label><select class="form-select" id="asState" onchange="aPg=1;renAssign()"><option value="">All</option><option value="on">Assigned</option><option value="off">Not assigned</option></select></div>
+          <div class="fg"><label>Project status</label><select class="form-select" id="asStatus" onchange="aPg=1;renAssign()"><option value="">All statuses</option><option value="Active">Active</option><option value="Completed">Completed</option><option value="Hold">Hold</option></select></div>
+          <div class="fg"><label>&nbsp;</label><button type="button" class="bsc bsc-o" style="min-height:44px" onclick="clrAssign()">Clear</button></div>
+        </div>
+        <p class="track-sum" id="assignSum"></p>
+        <div class="tc"><div class="table-responsive"><table class="table"><thead><tr><th>Employee</th><th>ID</th><th>Projects</th></tr></thead><tbody id="assignTB"></tbody></table></div><div id="assignE" class="empty-s" style="display:none"><i class="fas fa-user-check"></i><p>No employees match</p></div><div class="pag-w" id="assignPag"></div></div>
       </div>
 
       <!-- REPORTS -->
@@ -1266,7 +1266,6 @@ function renHist(){
 function goHist(p){histPg=Math.max(1,p);renHist()}
 
 /* ===== ASSIGNMENTS ===== */
-var assignPick='';
 var assignBusy=false;
 function assignIdFor(empUid,projId){
   var found='';
@@ -1281,47 +1280,76 @@ function assignCount(empUid){
   Object.values(aA).forEach(function(a){if(a&&a.employeeId===empUid&&a.projectId)n++});
   return n;
 }
-function pickAssign(uid){assignPick=uid;renAssign()}
+function fillAssignSel(id,rows,blank){
+  var el=document.getElementById(id);if(!el)return;
+  var v=el.value;
+  el.innerHTML='<option value="">'+blank+'</option>'+rows.join('');
+  if(Array.prototype.some.call(el.options,function(o){return o.value===v}))el.value=v;
+}
+function clrAssign(){
+  document.getElementById('sAssign').value='';
+  document.getElementById('asEmp').value='';
+  document.getElementById('asProj').value='';
+  document.getElementById('asState').value='';
+  document.getElementById('asStatus').value='';
+  aPg=1;renAssign();
+}
 function renAssign(){
-  var host=document.getElementById('assignEmps');
-  var box=document.getElementById('assignProjs');
+  var tb=document.getElementById('assignTB');
   var empty=document.getElementById('assignE');
-  if(!host||!box)return;
+  if(!tb)return;
   var q=(document.getElementById('sAssign').value||'').trim().toLowerCase();
+  var fe=document.getElementById('asEmp').value;
+  var fp=document.getElementById('asProj').value;
+  var fst=document.getElementById('asState').value;
+  var fs=document.getElementById('asStatus').value;
   var emps=Object.keys(aE).map(function(uid){
     var e=aE[uid]||{};
-    return {uid:uid,name:e.fullName||'Employee',code:e.employeeId||''};
+    return {uid:uid,name:e.fullName||'Employee',code:e.employeeId||'',email:e.email||'',dept:e.department||'',role:e.designation||''};
   }).sort(function(a,b){return a.name.localeCompare(b.name)});
   var projects=Object.keys(aP).map(function(id){
     var p=aP[id]||{};
     return {id:id,name:p.name||'Project',code:p.code||'',status:p.status||''};
   }).sort(function(a,b){return a.name.localeCompare(b.name)});
-  var empHits=emps.filter(function(e){return !q||(e.name+' '+e.code).toLowerCase().indexOf(q)!==-1});
-  var projHits=projects.filter(function(p){return !q||(p.name+' '+p.code).toLowerCase().indexOf(q)!==-1});
-  if(!empHits.length&&projHits.length)empHits=emps;
-  if(!projHits.length&&empHits.length)projHits=projects;
-  if(!emps.length){
-    host.innerHTML='';
-    box.innerHTML='';
-    box.style.display='none';
-    empty.style.display='block';
-    return;
+  fillAssignSel('asEmp',emps.map(function(e){return '<option value="'+e.uid+'">'+escH(e.name)+(e.code?' ('+escH(e.code)+')':'')+'</option>'}),'All employees');
+  fillAssignSel('asProj',projects.map(function(p){return '<option value="'+p.id+'">'+escH(p.name)+(p.code?' ('+escH(p.code)+')':'')+'</option>'}),'All projects');
+  var shown=projects.filter(function(p){
+    if(fp&&p.id!==fp)return false;
+    if(fs&&p.status!==fs)return false;
+    if(q&&(p.name+' '+p.code).toLowerCase().indexOf(q)===-1&&!emps.some(function(e){return (e.name+' '+e.code+' '+e.email+' '+e.dept).toLowerCase().indexOf(q)!==-1}))return false;
+    return true;
+  });
+  var qIsPerson=q&&emps.some(function(e){return (e.name+' '+e.code+' '+e.email+' '+e.dept+' '+e.role).toLowerCase().indexOf(q)!==-1});
+  if(qIsPerson&&!fp)shown=projects.filter(function(p){if(fs&&p.status!==fs)return false;return true});
+  var rows=emps.filter(function(e){
+    if(fe&&e.uid!==fe)return false;
+    var person=(e.name+' '+e.code+' '+e.email+' '+e.dept+' '+e.role).toLowerCase();
+    var projText=shown.map(function(p){return (p.name+' '+p.code).toLowerCase()}).join(' ');
+    if(q&&person.indexOf(q)===-1&&projText.indexOf(q)===-1)return false;
+    var onCount=shown.filter(function(p){return !!assignIdFor(e.uid,p.id)}).length;
+    if(fst==='on'&&!onCount)return false;
+    if(fst==='off'&&onCount)return false;
+    return true;
+  });
+  var sum=document.getElementById('assignSum');
+  if(sum)sum.textContent=rows.length+' employee'+(rows.length===1?'':'s');
+  var total=rows.length;
+  var pageRows=pg(rows,aPg,PS);
+  if(!total){tb.innerHTML='';empty.style.display='block'}
+  else{
+    empty.style.display='none';
+    tb.innerHTML=pageRows.map(function(e){
+      var n=assignCount(e.uid);
+      var list=shown.map(function(p){
+        var on=!!assignIdFor(e.uid,p.id);
+        return '<div class="assign-proj"><div class="assign-proj-meta"><strong>'+escH(p.name)+'</strong><small>'+escH(p.code)+(p.status?' · '+escH(p.status):'')+'</small></div><label class="assign-sw"><input type="checkbox" data-emp="'+e.uid+'" data-proj="'+p.id+'"'+(on?' checked':'')+' aria-label="Assign '+escH(p.name)+' to '+escH(e.name)+'"><span></span></label></div>';
+      }).join('')||'<div class="cmd-empty">No project matches these filters.</div>';
+      return '<tr><td><div class="assign-who"><div class="cmd-av">'+ini(e.name)+'</div><div><strong>'+escH(e.name)+'</strong><small>'+escH(e.dept||e.role||'Employee')+'</small><span class="assign-count">'+n+' on</span></div></div></td><td><code>'+escH(e.code||'-')+'</code></td><td class="assign-cell">'+list+'</td></tr>';
+    }).join('');
   }
-  empty.style.display='none';
-  if(!assignPick||!aE[assignPick]||!empHits.some(function(e){return e.uid===assignPick}))assignPick=empHits[0]?empHits[0].uid:'';
-  host.innerHTML=empHits.map(function(e){
-    var n=assignCount(e.uid);
-    return '<button type="button" class="assign-emp'+(e.uid===assignPick?' active':'')+'" onclick="pickAssign(\''+e.uid+'\')"><div class="cmd-av">'+ini(e.name)+'</div><div class="assign-emp-meta"><strong>'+escH(e.name)+'</strong><small>'+escH(e.code||'Employee')+'</small></div><span class="assign-count">'+n+' on</span></button>';
-  }).join('')||'<div class="cmd-empty">No employee matches that search.</div>';
-  var person=aE[assignPick]||{};
-  if(!assignPick){box.style.display='none';box.innerHTML='';return}
-  box.style.display='block';
-  var rows=projHits.map(function(p){
-    var on=!!assignIdFor(assignPick,p.id);
-    return '<div class="assign-proj"><div class="assign-proj-meta"><strong>'+escH(p.name)+'</strong><small>'+escH(p.code)+(p.status?' · '+escH(p.status):'')+'</small></div><label class="assign-sw"><input type="checkbox" data-emp="'+assignPick+'" data-proj="'+p.id+'"'+(on?' checked':'')+' aria-label="Assign '+escH(p.name)+'"><span></span></label></div>';
-  }).join('');
-  box.innerHTML='<h6>Projects for '+escH(person.fullName||'employee')+'</h6><p>On assigns this project. Off removes only the assignment.</p>'+(rows||'<div class="cmd-empty">No project matches that search.</div>');
+  pgH('assignPag',total,aPg,'goAP');
 }
+function goAP(p){aPg=Math.max(1,p);renAssign()}
 async function togAssign(box){
   if(assignBusy){box.checked=!box.checked;return}
   var empUid=box.getAttribute('data-emp')||'';
@@ -1388,7 +1416,7 @@ function bindCmdUi(){
   document.getElementById('cmdBoardWrap').addEventListener('pointerdown',onCmdPointerDown,{passive:false});
   document.getElementById('cmdBoardWrap').addEventListener('click',onCmdClick);
   document.getElementById('cmdDoneWrap').addEventListener('click',onCmdClick);
-  document.getElementById('assignProjs').addEventListener('change',function(e){
+  document.getElementById('assignTB').addEventListener('change',function(e){
     var box=e.target;
     if(box&&box.matches&&box.matches('input[type="checkbox"]'))togAssign(box);
   });
