@@ -1424,7 +1424,7 @@ function empEntries(){
 }
 function cmdMatch(w,q){
   if(!q)return true;
-  var hay=((w.title||'')+' '+(w.details||'')+' '+(w.assignedName||'')+' '+(w.progressNote||'')+' '+(w.projectName||'')+' '+(w.projectCode||'')).toLowerCase();
+  var hay=((w.title||'')+' '+(w.details||'')+' '+(w.assignedName||'')+' '+(w.createdByName||'')+' '+(w.progressNote||'')+' '+(w.projectName||'')+' '+(w.projectCode||'')).toLowerCase();
   return hay.indexOf(q)!==-1;
 }
 function cmdWhen(w){
@@ -1557,7 +1557,7 @@ function cmdCardHtml(id,w){
     +'<div class="cmd-details">'+escH(w.details||'')+'</div>'
     +handleLine(w)
     +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-calendar"></i> '+cmdWhen(w)+'</span>'
-    +(w.createdByName?'<span><i class="fas fa-user-shield"></i> '+escH(w.createdByName)+'</span>':'')
+    +(w.createdByName?'<span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+(w.createdByRole==='employee'?'Employee':'Admin')+' · '+escH(w.createdByName)+'</span>':'')
     +(w.assignedName?'<span><i class="fas fa-user"></i> '+escH(w.assignedName)+'</span>':cmdAudienceLabel(w))
     +'</div>'+note
     +'<div class="cmd-actions">'
@@ -1676,7 +1676,7 @@ function renCmd(){
       +handleLine(w)
       +'<div class="cmd-meta">'+cmdLinkLabel(w)+'<span><i class="fas fa-user"></i> '+(w.selfTag?'Admin · '+escH(w.assignedName||adminLabel(w.selfAdminId)):(w.assignedName?escH(w.assignedName):'Unassigned'))+'</span><span><i class="fas fa-check"></i> '+(w.completedDate?fD(w.completedDate):'')+' '+(w.completedTime||'')+'</span></div>'
       +(w.progressNote?'<div class="cmd-note"><i class="fas fa-comment-dots"></i> '+escH(w.progressNote)+'</div>':'')
-      +'<div class="cmd-meta"><span><i class="fas fa-user-shield"></i> '+(w.createdByName?escH(w.createdByName):'Unknown admin')+'</span></div>'
+      +'<div class="cmd-meta"><span><i class="fas fa-'+(w.createdByRole==='employee'?'user':'user-shield')+'"></i> '+(w.createdByRole==='employee'?'Employee':'Admin')+' · '+escH(w.createdByName||'Unknown')+'</span></div>'
       +'<div class="cmd-actions"><button type="button" class="bsc bsc-p" data-act="reopen" data-id="'+item.id+'">Reopen</button>'+cmdDelBtn(item.id,w)+'</div></article>';
   });
   document.getElementById('cmdDoneList').innerHTML=doneHtml;
@@ -1749,7 +1749,7 @@ async function saveCmd(){
         data.selfTag=false;data.selfAdminId='';
       }
       data.progressNote=data.progressNote||'';data.createdAt=now;data.createdDate=tS();
-      data.createdBy=CU.uid;data.createdByName=adminName;
+      data.createdBy=CU.uid;data.createdByName=adminName;data.createdByRole='admin';
       var hands=[{uid:CU.uid,name:adminName,role:'admin',action:'created',at:now}];
       if(wantSelf)hands.push({uid:CU.uid,name:adminName,role:'admin',action:'self',at:now});
       data.handlers=hands;
