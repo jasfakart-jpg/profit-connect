@@ -81,6 +81,13 @@ h1,h2,h3{font-family:'Outfit',sans-serif;font-weight:700}
       <div class="col-md-6"><label class="form-label">Password *</label><div class="pw-box"><input type="password" class="form-control" id="rPass" placeholder="Min 6 characters" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
       <div class="col-md-6"><label class="form-label">Confirm *</label><div class="pw-box"><input type="password" class="form-control" id="rPassC" placeholder="Re-enter password" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
     </div>
+    <div id="rOldWrap" class="mb-3" style="display:none;border:1px solid var(--border);border-radius:12px;padding:.9rem;background:var(--bg)">
+      <strong style="font-size:.92rem">This email still has a login</strong>
+      <p style="color:var(--text-sec);font-size:.82rem;margin:.35rem 0 .7rem">The account was deleted, but this email is still saved. Enter the password it used before. The new password above replaces it.</p>
+      <label class="form-label">Password it used before *</label>
+      <div class="pw-box"><input type="password" class="form-control" id="rOldPw" autocomplete="off"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div>
+      <button type="button" onclick="sendOldReset()" style="margin-top:.7rem;background:transparent;color:var(--primary);border:1px solid var(--border);border-radius:10px;padding:.55rem .8rem;font-weight:600;width:100%;cursor:pointer">Forgot it? Email a reset link</button>
+    </div>
     <button class="btn-reg" onclick="handleRegister()"><i class="fas fa-user-check"></i> Create Account</button>
     <div class="links"><a href="index.html"><i class="fas fa-arrow-left"></i> Back to Login</a></div>
   </div>
@@ -96,6 +103,24 @@ function showL(){document.getElementById('loadingOv').style.display='flex'}
 function hideL(){document.getElementById('loadingOv').style.display='none'}
 function togPw(btn){var i=btn.parentElement.querySelector('input');var ic=btn.querySelector('i');if(!i||!ic)return;if(i.type==='password'){i.type='text';ic.className='fas fa-eye-slash'}else{i.type='password';ic.className='fas fa-eye'}}
 
+function badPass(code){return code==='auth/wrong-password'||code==='auth/invalid-credential'||code==='auth/invalid-login-credentials'}
+async function matchEmail(path,email){
+  var snap=await db.ref(path).once('value'),hit='';
+  snap.forEach(function(c){var v=c.val()||{};if((v.email||'').toLowerCase()===email.toLowerCase())hit=c.key});
+  return hit;
+}
+async function idTaken(empId){
+  var snap=await db.ref('employees').once('value'),hit=false;
+  snap.forEach(function(c){if(((c.val()||{}).employeeId||'').toLowerCase()===empId.toLowerCase())hit=true});
+  return hit;
+}
+async function sendOldReset(){
+  var email=document.getElementById('rEmail').value.trim();
+  if(!email){toast('Enter the email first','error');return}
+  showL();
+  try{await auth.sendPasswordResetEmail(email);hideL();toast('Reset email sent. Set a password from that email, then create the account here with the same password.','success')}
+  catch(e){hideL();toast(e.message,'error')}
+}
 async function handleRegister(){
   var name=document.getElementById('rName').value.trim();
   var empId=document.getElementById('rEmpId').value.trim();
@@ -105,17 +130,39 @@ async function handleRegister(){
   var desig=document.getElementById('rDesig').value.trim();
   var pass=document.getElementById('rPass').value;
   var passC=document.getElementById('rPassC').value;
+  var oldPass=document.getElementById('rOldPw').value;
   if(!name||!empId||!mobile||!email||!dept||!desig||!pass||!passC){toast('Please fill in all fields','error');return}
   if(pass.length<6){toast('Password must be at least 6 characters','error');return}
   if(pass!==passC){toast('Passwords do not match','error');return}
   showL();
   try{
-    var cred=await auth.createUserWithEmailAndPassword(email,pass);
-    await db.ref('employees/'+cred.user.uid).set({fullName:name,employeeId:empId,mobile:mobile,email:email,department:dept,designation:desig,createdAt:Date.now(),loginPassword:pass});
+    if(await matchEmail('employees',email)){hideL();toast('This email already has an account. Please login.','error');return}
+    if(await matchEmail('admins',email)){hideL();toast('This email is an admin login. Please sign in.','error');return}
+    if(await idTaken(empId)){hideL();toast('This employee ID is already used','error');return}
+    var cred;
+    try{cred=await auth.createUserWithEmailAndPassword(email,pass)}
+    catch(err){
+      if(err.code!=='auth/email-already-in-use')throw err;
+      cred=await auth.signInWithEmailAndPassword(email,oldPass||pass);
+      if(pass!==(oldPass||pass))await cred.user.updatePassword(pass);
+    }
+    var uid=cred.user.uid;
+    if((await db.ref('admins/'+uid).once('value')).exists()){await auth.signOut();hideL();toast('This email is an admin login. Please sign in.','error');return}
+    if((await db.ref('employees/'+uid).once('value')).exists()){await auth.signOut();hideL();toast('This email already has an account. Please login.','error');return}
+    await db.ref('employees/'+uid).set({fullName:name,employeeId:empId,mobile:mobile,email:email,department:dept,designation:desig,createdAt:Date.now(),loginPassword:pass});
     await auth.signOut();
     hideL();toast('Account created! Please login.','success');
     setTimeout(function(){window.location.href='index.html'},1000);
-  }catch(err){hideL();toast(err.message,'error')}
+  }catch(err){
+    hideL();
+    try{await auth.signOut()}catch(e){}
+    if(err.code==='auth/email-already-in-use'||badPass(err.code)){
+      document.getElementById('rOldWrap').style.display='';
+      toast('This email was deleted, but the login is still there. Enter the password it used before, then create again.','error');
+      return;
+    }
+    toast(err.message,'error');
+  }
 }
 var sv=localStorage.getItem('ptdc-theme');if(sv){document.documentElement.setAttribute('data-theme',sv);document.documentElement.setAttribute('data-bs-theme',sv==='dark'?'dark':'light')}
 </script>

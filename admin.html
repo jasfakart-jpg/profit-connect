@@ -626,6 +626,7 @@ body.cmd-dragging-body{user-select:none;cursor:grabbing}
     <div class="col-12" id="emOldWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emOldLbl">Previous password</label><div class="pw-box"><input type="text" class="form-control" id="emOldPw" autocomplete="off"><button type="button" class="pw-eye" id="emOldEye" onclick="togPw(this)" aria-label="Show password" style="display:none"><i class="fas fa-eye"></i></button></div><p id="emOldHint" style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This is the password saved for this login. Type a new password below to replace it.</p></div>
     <div class="col-md-6" id="emPwWrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPwLbl">Password *</label><div class="pw-box"><input type="password" class="form-control" id="emPw" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
     <div class="col-md-6" id="emPw2Wrap"><label class="form-label" style="font-size:.85rem;font-weight:600" id="emPw2Lbl">Confirm password *</label><div class="pw-box"><input type="password" class="form-control" id="emPw2" autocomplete="new-password"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div></div>
+    <div class="col-12" id="emReuseWrap" style="display:none"><label class="form-label" style="font-size:.85rem;font-weight:600">Password this email used before *</label><div class="pw-box"><input type="password" class="form-control" id="emReusePw" autocomplete="off"><button type="button" class="pw-eye" onclick="togPw(this)" aria-label="Show password"><i class="fas fa-eye"></i></button></div><p style="color:var(--text-sec);font-size:.8rem;margin:.45rem 0 0">This email was deleted, but the login is still there. Enter that password, then save. The new password above replaces it.</p></div>
   </div></div>
   <div class="modal-footer"><button class="bsc bsc-o" data-bs-dismiss="modal">Cancel</button><button class="bsc bsc-p" style="padding:.5rem 1.5rem;min-height:44px" onclick="saveEmp()">Save</button></div>
 </div></div></div>
@@ -928,6 +929,16 @@ async function reclaimLogin(email,oldPass,newPass){
   await au.signOut();
   return uid;
 }
+async function deleteAuthLogin(email,pass){
+  if(!email||!pass)return;
+  var au=makerAuth();
+  try{
+    var cred=await au.signInWithEmailAndPassword(email,pass);
+    await cred.user.delete();
+  }finally{
+    try{await au.signOut()}catch(e){}
+  }
+}
 function emailInUse(code){return code==='auth/email-already-in-use'}
 function badPass(code){return code==='auth/wrong-password'||code==='auth/invalid-credential'||code==='auth/invalid-login-credentials'}
 async function dropEmployeeProfile(uid){
@@ -958,6 +969,8 @@ function openEmpM(id){
   document.getElementById('emPwWrap').style.display='';
   document.getElementById('emPw2Wrap').style.display='';
   document.getElementById('emOldWrap').style.display='none';
+  document.getElementById('emReuseWrap').style.display='none';
+  document.getElementById('emReusePw').value='';
   if(id&&aE[id]){
     var v=aE[id];
     document.getElementById('edEmpId').value=id;
@@ -1011,10 +1024,22 @@ async function saveEmp(){
       T(pass?'Password updated. Past work is unchanged':'Employee updated. Past work is unchanged','success');
     }
     else{
-      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value;
+      var pass=document.getElementById('emPw').value,pass2=document.getElementById('emPw2').value,reuse=document.getElementById('emReusePw').value;
       if(pass.length<6){hL();T('Password must be at least 6 characters','error');return}
       if(pass!==pass2){hL();T('Passwords do not match','error');return}
-      var uid=await createLogin(email,pass);
+      var uid;
+      try{uid=reuse?await reclaimLogin(email,reuse,pass):await createLogin(email,pass)}
+      catch(err){
+        if(!emailInUse(err.code)||reuse)throw err;
+        try{uid=await reclaimLogin(email,pass,pass)}
+        catch(err2){
+          if(!badPass(err2.code))throw err2;
+          document.getElementById('emReuseWrap').style.display='';
+          hL();T('This email was deleted, but the login is still there. Enter the password it used before, then save again.','error');
+          return;
+        }
+      }
+      if((await db.ref('admins/'+uid).once('value')).exists()){hL();T('This email is an admin login','error');return}
       data.createdAt=Date.now();
       data.loginPassword=pass;
       await db.ref('employees/'+uid).set(data);
@@ -1055,6 +1080,7 @@ function delEmp(uid){
   document.getElementById('cfmB').onclick=async function(){
     sL();
     try{
+      if(v.email&&v.loginPassword){try{await deleteAuthLogin(v.email,v.loginPassword)}catch(err){}}
       var updates={};
       updates['employees/'+uid]=null;
       Object.keys(aA).forEach(function(id){if(aA[id]&&aA[id].employeeId===uid)updates['assignments/'+id]=null});
